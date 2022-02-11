@@ -42,6 +42,7 @@ class TopoTest:
                                                                               internal_p=self.wasserstein_p)
         self.wasserstein_distance = None
         self.wasserstein_thresholds = None
+        self.wasserstein_distance_predict = None
 
 
     def fit(self, rv, n_signature, n_test):
@@ -82,8 +83,8 @@ class TopoTest:
             samples = [sample_standarize(sample) for sample in samples]
 
         reprs = [self.get_signature(sample) for sample in samples]
-        w_distance = self.wasserstein_representation.transform(reprs)
-        dmin, dmean, dmax, dq = self.aggregate_distances(w_distance)
+        self.wasserstein_distance_predict = self.wasserstein_representation.transform(reprs)
+        dmin, dmean, dmax, dq = self.aggregate_distances(self.wasserstein_distance_predict)
         return distance_aggregators(min=dmin < self.wasserstein_thresholds.min,
                                     mean=dmean < self.wasserstein_thresholds.mean,
                                     max=dmax < self.wasserstein_thresholds.max,
@@ -100,7 +101,10 @@ class TopoTest:
             return st.persistence_intervals_in_dimension(0)
 
     def save_distance_matrix(self, filename):
-        np.savetxt(filename, self.wasserstein_distance)
+        np.save(filename, self.wasserstein_distance)
+
+    def save_predict_distance_matrix(self, filename):
+        np.save(filename, self.wasserstein_distance_predict)
 
     def save_model(self):
         pass
