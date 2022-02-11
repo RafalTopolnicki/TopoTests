@@ -23,6 +23,11 @@ class GaussianMixture:
         X = [self.gauss_rv[ind].rvs(size=1)[0] for ind in inds]
         return X
 
+    def cdf(self, x):
+        cdf=0
+        for p, rv in zip(self.probas, self.gauss_rv):
+            cdf += p*rv.cdf(x)
+        return cdf
 
 class AbsoluteDistribution:
     def __init__(self, rv):
@@ -31,14 +36,28 @@ class AbsoluteDistribution:
     def rvs(self, size):
         return np.abs(self.rv.rvs(size))
 
+    def cdf(self, x):
+        return 2*self.rv.cdf(x) - 1
+
 
 class MultivariateDistribution:
     def __init__(self, univariates, label=None):
         self.univariates = univariates
         self.label = label
+        self.dim = len(univariates)
 
     def rvs(self, size):
         sample = []
         for univariate in self.univariates:
             sample.append(univariate.rvs(size))
         return np.transpose(sample)
+
+    def cdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        # no correlations between axies are allowed
+        if self.dim == 1:
+            pts = [pts]
+        cdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            cdf *= univariate.cdf(pt)
+        return cdf

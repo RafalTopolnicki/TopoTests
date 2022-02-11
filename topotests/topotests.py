@@ -7,10 +7,15 @@ from mergegram import mergegram
 
 distance_aggregators = namedtuple('distance_aggregators', 'min mean max quantile')
 
+
+def sample_standarize(sample):
+    return (sample - np.mean(sample, axis=0))/np.std(sample, axis=0)
+
+
 class TopoTest:
     def __init__(self, n: int, dim: int, significance_level: float = 0.05,
                  method='mergegram', wasserstein_p=1, wasserstein_order=1,
-                 standarization=False):
+                 standarize=False):
         """
 
         :param n:
@@ -21,9 +26,9 @@ class TopoTest:
         :param wasserstein_order:
         """
 
-        if method not in ['mergegram', 'persistence', 'euler']:
+        if method not in ['mergegram', 'persistence']:
             raise ValueError(f'Incorrect method. Found method={method}. Possible options are '
-                             f'"mergegram", "persistence" or "euler"')
+                             f'"mergegram", "persistence"')
         self.fitted = False
         self.sample_pts_n = n
         self.sample_pt_dim = dim
@@ -31,16 +36,22 @@ class TopoTest:
         self.method = method
         self.wasserstein_p = wasserstein_p
         self.wasserstein_order = wasserstein_order
+        self.standarize = standarize
         self.wasserstein_representation = representations.WassersteinDistance(n_jobs=-1,
                                                                               order=self.wasserstein_order,
                                                                               internal_p=self.wasserstein_p)
         self.wasserstein_distance = None
         self.wasserstein_thresholds = None
 
+
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample
         samples = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim) for i in range(n_signature)]
         samples_test = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim) for i in range(n_test)]
+        if self.standarize:
+            samples = [sample_standarize(sample) for sample in samples]
+            samples_test = [sample_standarize(sample) for sample in samples_test]
+
         # get signatures representations of both samples
         signature_samples = [self.get_signature(sample) for sample in samples]
         signature_samples_test = [self.get_signature(sample) for sample in samples_test]
@@ -66,6 +77,10 @@ class TopoTest:
             raise RuntimeError('Cannot run predict(). Run fit() first!')
         if len(samples) == 1:
             samples = [samples]
+
+        if self.standarize:
+            samples = [sample_standarize(sample) for sample in samples]
+
         reprs = [self.get_signature(sample) for sample in samples]
         w_distance = self.wasserstein_representation.transform(reprs)
         dmin, dmean, dmax, dq = self.aggregate_distances(w_distance)
@@ -77,13 +92,12 @@ class TopoTest:
     def get_signature(self, sample):
         if self.method == 'mergegram':
             return mergegram(sample)
+
         if self.method == 'persistence':
             ac = gd.AlphaComplex(points=sample)
             st = ac.create_simplex_tree()
             st.compute_persistence()
             return st.persistence_intervals_in_dimension(0)
-        if self.method == 'euler':
-            pass
 
     def save_distance_matrix(self, filename):
         np.savetxt(filename, self.wasserstein_distance)
