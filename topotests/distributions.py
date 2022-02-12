@@ -29,6 +29,13 @@ class GaussianMixture:
             cdf += p*rv.cdf(x)
         return cdf
 
+    def pdf(self, x):
+        pdf=0
+        for p, rv in zip(self.probas, self.gauss_rv):
+            pdf += p*rv.pdf(x)
+        return pdf
+
+
 class AbsoluteDistribution:
     def __init__(self, rv):
         self.rv = rv
@@ -38,6 +45,10 @@ class AbsoluteDistribution:
 
     def cdf(self, x):
         return 2*self.rv.cdf(x) - 1
+
+    def pdf(self, x):
+        return 2*self.rv.pdf(x)
+
 
 
 class MultivariateDistribution:
@@ -61,3 +72,12 @@ class MultivariateDistribution:
         for pt, univariate in zip(pts, self.univariates):
             cdf *= univariate.cdf(pt)
         return cdf
+
+    def pdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        if self.dim == 1:
+            pts = [pts]
+        pdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            pdf *= univariate.pdf(pt)
+        return pdf
