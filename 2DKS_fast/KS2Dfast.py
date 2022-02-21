@@ -61,6 +61,9 @@ def CountQuads(Arr2D, point):
     # NOTE:  all the f's are supposed to sum to 1.0. Float representation
     # cause SOMETIMES sum to 1.000000002 or something. I don't know how to
     # test for that reliably, OR what to do about it yet. Keep in mind.
+    
+    #print(f'fast data: {fpp}, {fnp}, {fpn}, {fnn}')
+    
     return(fpp, fnp, fpn, fnn)
 
 def IntCdf(fun, x1, y1, x0, y0):
@@ -127,6 +130,7 @@ def FuncQuads_fast(func2D, point, xlim, ylim, rounddig=4):
     Qnp = IntCdf(func2D, xlim[0], point[1], point[0], ylim[1])
     Qpn = IntCdf(func2D, xlim[1], point[1], point[0], ylim[0])
     Qnn = IntCdf(func2D, point[0], point[1], xlim[0], ylim[0])
+    
 
     # TODO:
     # * remove round
@@ -142,6 +146,8 @@ def FuncQuads_fast(func2D, point, xlim, ylim, rounddig=4):
     fnp = Qnp/totInt
     fpn = Qpn/totInt
     fnn = Qnn/totInt
+    
+    #print(f'fast the: {fpp}, {fnp}, {fpn}, {fnn}')
     
     return(fpp, fnp, fpn, fnn)
 
@@ -286,8 +292,10 @@ def ks2d1s_fast(Arr2D, func2D, xlim=[], ylim=[]):
                     abs(np.amin(Arr2D[:, 1]) -
                     np.amax(Arr2D[:, 1]))/10)
     d = 0
-    xlim = [-np.Inf, np.Inf]
-    ylim = [-np.Inf, np.Inf]
+    #xlim = [-np.Inf, np.Inf]
+    #ylim = [-np.Inf, np.Inf]
+    xlim = [-9999, np.Inf]
+    ylim = [-9999, np.Inf]
     for point in Arr2D:
         fpp1, fmp1, fpm1, fmm1 = FuncQuads_fast(func2D, point, xlim, ylim)
         fpp2, fmp2, fpm2, fmm2 = CountQuads(Arr2D, point)
