@@ -23,10 +23,12 @@ def IntCdf(fun, p_high, p_low):
     for idx_len in range(1, n_dim):
         factor = (-1) ** idx_len
         change_idxs = list(combinations(range(n_dim), idx_len))
+        #print(change_idxs, factor)
         for change_idx in change_idxs:
             p = p_high.copy()
-            change_idx = change_idx[0]
-            p[change_idx] = p_low[change_idx]
+            for change_id in change_idx:
+                p[change_id] = p_low[change_id]
+            #print(f'val f: {fun(p)} {p}')
             value += factor * fun(p)
 
     value += (-1) ** n_dim * fun(p_low)
@@ -47,6 +49,10 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
     n_dim = len(point)
     n_data = arr_nd.shape[0]
 
+    # totInt = IntCdf(func, axis_high, axis_low)
+    # if totInt < 0.99:
+    #    print(totInt)
+
     theoretical_values = []
     data_values = []
 
@@ -61,21 +67,20 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
 
         for id_b, b in enumerate(bin_mask):
             if b == '1':
-                p_high[id_b] = axis_high
+                p_high[id_b] = axis_high[id_b]
                 p_low[id_b] = point[id_b]
                 filtration_mask = np.logical_and(filtration_mask, arr_nd[:, id_b] > point[id_b])
             else:
                 p_high[id_b] = point[id_b]
-                p_low[id_b] = axis_low
+                p_low[id_b] = axis_low[id_b]
                 # remove datapoints in the orthant
                 filtration_mask = np.logical_and(filtration_mask, arr_nd[:, id_b] < point[id_b])
         # get values of theoretical cdf over the orthant
         theoretical_values.append(IntCdf(func, p_high, p_low))
         data_values.append(np.sum(filtration_mask) / n_data)
-
+        # print(theoretical_values)
     d = np.max(np.abs(np.array(theoretical_values) - np.array(data_values)))
     return d
-
 
 def multiKS(arr_nd, cdf_nd):
     """
@@ -91,8 +96,10 @@ def multiKS(arr_nd, cdf_nd):
     # for unknown reason Cumulative distribution functions implemented in Scipy
     # does not work properly with np.Inf and -np.Inf
     # this is an ugly bypass
-    numeric_low = -1e6
-    numeric_high = 1e6
+    #numeric_low = -1e4
+    #numeric_high = 1e4
+    numeric_low = np.min(arr_nd, axis=0)-20
+    numeric_high = np.max(arr_nd, axis=0)+20
     d_ks = []
     for point in arr_nd:
         d_ks.append(orthant(arr_nd=arr_nd, func=cdf_nd, point=point,
