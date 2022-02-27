@@ -4,6 +4,7 @@ from gudhi import representations
 import gudhi as gd
 import numpy as np
 from mergegram import mergegram
+from ecc import *
 
 distance_aggregators = namedtuple('distance_aggregators', 'min mean max quantile')
 
@@ -26,9 +27,9 @@ class TopoTest:
         :param wasserstein_order:
         """
 
-        if method not in ['mergegram', 'persistence']:
+        if method not in ['mergegram', 'persistence', 'ecc']:
             raise ValueError(f'Incorrect method. Found method={method}. Possible options are '
-                             f'"mergegram", "persistence"')
+                             f'"mergegram", "persistence", "ecc"')
         self.fitted = False
         self.sample_pts_n = n
         self.sample_pt_dim = dim
@@ -37,13 +38,15 @@ class TopoTest:
         self.wasserstein_p = wasserstein_p
         self.wasserstein_order = wasserstein_order
         self.standarize = standarize
-        self.wasserstein_representation = representations.WassersteinDistance(n_jobs=-1,
-                                                                              order=self.wasserstein_order,
-                                                                              internal_p=self.wasserstein_p)
-        self.wasserstein_distance = None
-        self.wasserstein_thresholds = None
-        self.wasserstein_distance_predict = None
-
+        if method in ['mergegram', 'persistence']:
+            self.representation = representations.WassersteinDistance(n_jobs=-1,
+                                                                      order=self.wasserstein_order,
+                                                                      internal_p=self.wasserstein_p)
+        else:
+            self.representation = ECC_representation()
+        self.representation_distance = None
+        self.representation_thresholds = None
+        self.representation_distance_predict = None
 
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample
@@ -56,14 +59,13 @@ class TopoTest:
         # get signatures representations of both samples
         signature_samples = [self.get_signature(sample) for sample in samples]
         signature_samples_test = [self.get_signature(sample) for sample in samples_test]
-        # get WasserstainDistance representation
-        self.wasserstein_representation.fit(signature_samples)
-        self.wasserstein_distance = self.wasserstein_representation.transform(signature_samples_test)
-        dmin, dmean, dmax, dq = self.aggregate_distances(self.wasserstein_distance)
-        self.wasserstein_thresholds = distance_aggregators(min=np.quantile(dmin, 1-self.significance_level),
-                                                           mean=np.quantile(dmean, 1-self.significance_level),
-                                                           max=np.quantile(dmax, 1-self.significance_level),
-                                                           quantile=np.quantile(dq, 1-self.significance_level))
+        self.representation.fit(signature_samples)
+        self.representation_distance = self.representation.transform(signature_samples_test)
+        dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance)
+        self.representation_thresholds = distance_aggregators(min=np.quantile(dmin, 1 - self.significance_level),
+                                                              mean=np.quantile(dmean, 1-self.significance_level),
+                                                              max=np.quantile(dmax, 1-self.significance_level),
+                                                              quantile=np.quantile(dq, 1-self.significance_level))
         self.fitted = True
 
     def aggregate_distances(self, distance_matrix):
@@ -83,12 +85,12 @@ class TopoTest:
             samples = [sample_standarize(sample) for sample in samples]
 
         reprs = [self.get_signature(sample) for sample in samples]
-        self.wasserstein_distance_predict = self.wasserstein_representation.transform(reprs)
-        dmin, dmean, dmax, dq = self.aggregate_distances(self.wasserstein_distance_predict)
-        return distance_aggregators(min=dmin < self.wasserstein_thresholds.min,
-                                    mean=dmean < self.wasserstein_thresholds.mean,
-                                    max=dmax < self.wasserstein_thresholds.max,
-                                    quantile=dq < self.wasserstein_thresholds.quantile)
+        self.representation_distance_predict = self.representation.transform(reprs)
+        dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
+        return distance_aggregators(min=dmin < self.representation_thresholds.min,
+                                    mean=dmean < self.representation_thresholds.mean,
+                                    max=dmax < self.representation_thresholds.max,
+                                    quantile=dq < self.representation_thresholds.quantile)
 
     def get_signature(self, sample):
         if self.method == 'mergegram':
@@ -100,11 +102,15 @@ class TopoTest:
             st.compute_persistence()
             return st.persistence_intervals_in_dimension(0)
 
+        if self.method == 'ecc':
+            ecc_contribution = compute_ECC_contributions_alpha(sample)
+            return ecc_contribution
+
     def save_distance_matrix(self, filename):
-        np.save(filename, self.wasserstein_distance)
+        np.save(filename, self.representation_distance)
 
     def save_predict_distance_matrix(self, filename):
-        np.save(filename, self.wasserstein_distance_predict)
+        np.save(filename, self.representation_distance_predict)
 
     def save_model(self):
         pass
