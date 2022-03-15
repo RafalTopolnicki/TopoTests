@@ -3,4 +3,4 @@
 *.txt
 topotests/__pycache__
 notebooks/.ipynb_checkpoints
-notebooks/results.*
+notebooks/results.*/*.npy
