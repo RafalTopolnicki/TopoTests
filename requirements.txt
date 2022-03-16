@@ -1,0 +1,15 @@
+numpy
+pandas
+matplotlib
+scipy
+scikit-learn
+kmapper
+gudhi
+jupyterlab==3.2.0
+catboost
+ray
+kmedoids
+pingouin
+POT
+rpy2
+ipywidgets
