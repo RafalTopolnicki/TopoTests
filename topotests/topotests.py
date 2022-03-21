@@ -27,9 +27,9 @@ class TopoTest:
         :param wasserstein_order:
         """
 
-        if method not in ['mergegram', 'persistence', 'ecc']:
+        if method not in ['mergegram', 'persistence', 'ecc', 'ecc_mean']:
             raise ValueError(f'Incorrect method. Found method={method}. Possible options are '
-                             f'"mergegram", "persistence", "ecc"')
+                             f'"mergegram", "persistence", "ecc", "ecc_mean"')
         self.fitted = False
         self.sample_pts_n = n
         self.sample_pt_dim = dim
@@ -42,8 +42,10 @@ class TopoTest:
             self.representation = representations.WassersteinDistance(n_jobs=-1,
                                                                       order=self.wasserstein_order,
                                                                       internal_p=self.wasserstein_p)
-        else:
+        if method == 'ecc':
             self.representation = ECC_representation()
+        if method == 'ecc_mean':
+            self.representation = ECC_representation_mean()
         self.representation_distance = None
         self.representation_thresholds = None
         self.representation_distance_predict = None
@@ -57,16 +59,22 @@ class TopoTest:
             samples_test = [sample_standarize(sample) for sample in samples_test]
 
         # get signatures representations of both samples
-        signature_samples = [self.get_signature(sample) for sample in samples]
-        signature_samples_test = [self.get_signature(sample) for sample in samples_test]
-        self.representation.fit(signature_samples)
-        self.representation_distance = self.representation.transform(signature_samples_test)
-        dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance)
-        self.representation_thresholds = distance_aggregators(min=np.quantile(dmin, 1 - self.significance_level),
-                                                              mean=np.quantile(dmean, 1-self.significance_level),
-                                                              max=np.quantile(dmax, 1-self.significance_level),
-                                                              quantile=np.quantile(dq, 1-self.significance_level))
-        self.fitted = True
+        if self.method != 'ecc_mean':
+            signature_samples = [self.get_signature(sample) for sample in samples]
+            signature_samples_test = [self.get_signature(sample) for sample in samples_test]
+            self.representation.fit(signature_samples)
+            self.representation_distance = self.representation.transform(signature_samples_test)
+            dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance)
+            self.representation_thresholds = distance_aggregators(min=np.quantile(dmin, 1 - self.significance_level),
+                                                                  mean=np.quantile(dmean, 1-self.significance_level),
+                                                                  max=np.quantile(dmax, 1-self.significance_level),
+                                                                  quantile=np.quantile(dq, 1-self.significance_level))
+            self.fitted = True
+        if self.method == 'ecc_mean':
+            self.representation.fit(samples)
+            self.representation_distance = self.representation.transform(samples_test)
+            self.representation_thresholds = np.quantile(self.representation_distance, 0.95)
+            self.fitted = True
 
     def aggregate_distances(self, distance_matrix):
         dmean = np.mean(distance_matrix, axis=1)
@@ -84,13 +92,18 @@ class TopoTest:
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
 
-        reprs = [self.get_signature(sample) for sample in samples]
-        self.representation_distance_predict = self.representation.transform(reprs)
-        dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
-        return distance_aggregators(min=dmin < self.representation_thresholds.min,
+        if self.method != 'ecc_mean':
+            reprs = [self.get_signature(sample) for sample in samples]
+            self.representation_distance_predict = self.representation.transform(reprs)
+            dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
+            return distance_aggregators(min=dmin < self.representation_thresholds.min,
                                     mean=dmean < self.representation_thresholds.mean,
                                     max=dmax < self.representation_thresholds.max,
                                     quantile=dq < self.representation_thresholds.quantile)
+        else:
+            self.representation_distance_predict = self.representation.transform(samples)
+            res = [dp < self.representation_thresholds for dp in self.representation_distance_predict]
+            return distance_aggregators(min=res, mean=res, max=res, quantile=res)
 
     def get_signature(self, sample):
         if self.method == 'mergegram':

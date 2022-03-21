@@ -1,5 +1,6 @@
 import numpy as np
 import gudhi as gd
+import scipy.interpolate as spi
 
 # computes each simplex contribution to the ECC
 # function by Davide
@@ -127,5 +128,40 @@ class ECC_representation():
         for id_rep, ecc_rep in enumerate(self.representation):
             for id_data, ecc_data in enumerate(representation):
                 dist[id_rep, id_data] = get_ecc_distance_from_contributions(ecc_rep, ecc_data)
+        return dist
 
+class ECC_representation_mean():
+    def __init__(self):
+        self.representation = None
+        self.x_max = 3
+        self.xs = np.linspace(0, self.x_max, 100)
+        self.n_fitted = 0
+
+    def fit(self, samples):
+        self.representation = self.xs * 0
+        for sample in samples:
+            ecc = compute_ECC_contributions_alpha(sample)
+            ecc = np.array(ecc)
+            ecc[:, 1] = np.cumsum(ecc[:, 1])
+            ecc = np.vstack([ecc, [self.x_max, 1]])
+            interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1])
+            self.representation += interpolator(self.xs)
+        self.representation /= len(samples)
+
+    def transform(self, samples):
+        # if not self.representation:
+        #     raise RuntimeError('Run fit() before transform()')
+
+        representation = []
+        for sample in samples:
+            ecc = compute_ECC_contributions_alpha(sample)
+            ecc = np.array(ecc)
+            ecc[:, 1] = np.cumsum(ecc[:, 1])
+            ecc = np.vstack([ecc, [self.x_max, 1]])
+            interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1])
+            representation.append(interpolator(self.xs))
+
+        dist = []
+        for rep in representation:
+            dist.append(np.mean(np.abs(rep-self.representation)))
         return dist
