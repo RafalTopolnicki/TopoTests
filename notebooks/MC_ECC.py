@@ -45,15 +45,15 @@ def run_ecc(N, rvs):
 
 rvs = [MultivariateDistribution([st.norm(), st.norm(), st.norm()], label='N01xN01xN01'),
        MultivariateDistribution([st.t(df=3), st.t(df=3), st.t(df=3)], label='T3xT3xT3'),
-       # MultivariateDistribution([st.t(df=5), st.t(df=5), st.t(df=5)], label='T5xT5xT5'),
-       # MultivariateDistribution([st.t(df=10), st.t(df=10), st.t(df=10)], label='T10xT10xT10'),
-       # MultivariateDistribution([st.logistic(), st.logistic(), st.logistic()], label='LogisticxLogisticxLogistic'),
-       # MultivariateDistribution([st.laplace(), st.laplace(), st.laplace()], label='LaplacexLaplacexLaplace'),
-       # MultivariateDistribution([st.norm(), st.t(df=5), st.t(df=5)], label='N01xT5xT5'),
-       # MultivariateDistribution([st.norm(), st.norm(), st.t(df=5)], label='N01xN01xT5'),
-       # MultivariateDistribution([GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
-       #                          GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
-       #                          GaussianMixture([-1, 1, 0], [1, 1, 2], [0.33, 0.33, 0.34])], label='GM1')
+       MultivariateDistribution([st.t(df=5), st.t(df=5), st.t(df=5)], label='T5xT5xT5'),
+       MultivariateDistribution([st.t(df=10), st.t(df=10), st.t(df=10)], label='T10xT10xT10'),
+       MultivariateDistribution([st.logistic(), st.logistic(), st.logistic()], label='LogisticxLogisticxLogistic'),
+       MultivariateDistribution([st.laplace(), st.laplace(), st.laplace()], label='LaplacexLaplacexLaplace'),
+       MultivariateDistribution([st.norm(), st.t(df=5), st.t(df=5)], label='N01xT5xT5'),
+       MultivariateDistribution([st.norm(), st.norm(), st.t(df=5)], label='N01xN01xT5'),
+       MultivariateDistribution([GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
+                                GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
+                                GaussianMixture([-1, 1, 0], [1, 1, 2], [0.33, 0.33, 0.34])], label='GM1')
                                 ]
 
 
@@ -83,6 +83,7 @@ Ns = [25, 50, 100, 200, 300, 500, 1000]
 dim=3
 mc_samples = 500
 n_signature = n_test = 250
+ecc_norm = 'l1'
 results = {}
 for N in Ns:
     out = run_ecc(N, rvs)
