@@ -11,5 +11,4 @@ ray
 kmedoids
 pingouin
 POT
-rpy2
 ipywidgets
