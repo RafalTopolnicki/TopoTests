@@ -55,19 +55,21 @@ class ecc_representation():
     def fit(self, samples):
         self.max_range = -np.Inf
         eccs = []
+        jumps = set()
         for sample in samples:
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
+            jumps.update(ecc[:, 0])
             self.max_range = max(self.max_range, ecc[-1, 0])
             eccs.append(ecc)
-        self.xs = np.linspace(0, self.max_range, self.n_interpolation_points)
+        self.xs = np.sort(list(jumps))
         self.representation = self.xs * 0
         # extend all ecc so that it include the max_range
         # TODO: here we assume that the last value of ecc is always 1
         #       is that true?
         for ecc in eccs:
             ecc_extended = np.vstack([ecc, [self.max_range, 1]])
-            interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1])
+            interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind='previous')
             self.representation += interpolator(self.xs)
         self.representation /= len(samples)
         self.fitted = True
@@ -81,7 +83,7 @@ class ecc_representation():
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             ecc = np.vstack([ecc, [self.max_range, 1]])
-            interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1])
+            interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind='previous')
             representation.append(interpolator(self.xs))
 
         if self.norm == 'l1':
