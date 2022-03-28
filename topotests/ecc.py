@@ -56,7 +56,7 @@ class ecc_representation():
         self.max_range = -np.Inf
         eccs = []
         jumps = set()
-        for sample in samples:
+        for count, sample  in enumerate(samples):
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             jumps.update(ecc[:, 0])
@@ -67,7 +67,7 @@ class ecc_representation():
         # extend all ecc so that it include the max_range
         # TODO: here we assume that the last value of ecc is always 1
         #       is that true?
-        for ecc in eccs:
+        for count, ecc in enumerate(eccs):
             ecc_extended = np.vstack([ecc, [self.max_range, 1]])
             interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind='previous')
             self.representation += interpolator(self.xs)
@@ -78,19 +78,17 @@ class ecc_representation():
         if not self.fitted:
             raise RuntimeError('Run fit() before transform()')
 
-        representation = [] # representation of the samples point
-        for sample in samples:
+        dist = []
+        for count, sample in enumerate(samples):
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             ecc = np.vstack([ecc, [self.max_range, 1]])
             interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind='previous')
-            representation.append(interpolator(self.xs))
-
-        if self.norm == 'l1':
-            dist = [np.trapz(np.abs(rep-self.representation), x=self.xs) for rep in representation]
-        elif self.norm == 'l2':
-            dist = [np.trapz((rep - self.representation)**2, x=self.xs) for rep in representation]
-        else:
-            # by default compute the sup norm
-            dist = [np.max(np.abs(rep - self.representation)) for rep in representation]
+            representation = interpolator(self.xs)
+            if self.norm == 'l1':
+                dist.append(np.trapz(np.abs(representation-self.representation), x=self.xs))
+            elif self.norm == 'l2':
+                dist.append(np.trapz((representation-self.representation)**2, x=self.xs))
+            else:
+                dist.append(np.max(np.abs(representation-self.representation)))
         return dist
