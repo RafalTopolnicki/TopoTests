@@ -14,7 +14,8 @@ def sample_standarize(sample):
 class TopoTest:
     def __init__(self, n: int, dim: int, significance_level: float = 0.05,
                  method='mergegram', wasserstein_p=1, wasserstein_order=1,
-                 ecc_norm='sup', standarize=False):
+                 ecc_norm='sup', scaling=1,
+                 standarize=False):
         """
 
         :param n:
@@ -37,6 +38,7 @@ class TopoTest:
         self.wasserstein_order = wasserstein_order
         self.ecc_norm = ecc_norm
         self.standarize = standarize
+        self.scaling = scaling
         if method in ['mergegram', 'persistence']:
             self.representation = representations.WassersteinDistance(n_jobs=-1,
                                                                       order=self.wasserstein_order,
@@ -49,8 +51,8 @@ class TopoTest:
 
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample
-        samples = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim) for i in range(n_signature)]
-        samples_test = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim) for i in range(n_test)]
+        samples = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim)*self.scaling for i in range(n_signature)]
+        samples_test = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim)*self.scaling for i in range(n_test)]
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
             samples_test = [sample_standarize(sample) for sample in samples_test]
@@ -86,6 +88,8 @@ class TopoTest:
             raise RuntimeError('Cannot run predict(). Run fit() first!')
         if len(samples) == 1:
             samples = [samples]
+
+        samples = [sample * self.scaling for sample in samples]
 
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
