@@ -78,8 +78,7 @@ if N == None:
 
 
 dim=3
-#mc_samples = [50, 100, 200, 500, 1000, 2000, 5000, 10000]
-mc_samples = [5000]
+mc_samples = [50, 100, 200, 500, 1000, 2000, 5000, 10000]
 
 results = {}
 for mc_sample in mc_samples:
