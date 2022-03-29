@@ -45,6 +45,7 @@ def prune_contributions(contributions):
 class ecc_representation():
     def __init__(self, norm='sup', n_interpolation_points=100):
         self.representation = None
+        self.std = None
         self.max_range = -np.Inf
         self.xs = None
         self.n_interpolation_points = n_interpolation_points
@@ -64,14 +65,19 @@ class ecc_representation():
             eccs.append(ecc)
         self.xs = np.sort(list(jumps))
         self.representation = self.xs * 0
+        representation2 = self.xs * 0
         # extend all ecc so that it include the max_range
         # TODO: here we assume that the last value of ecc is always 1
         #       is that true?
         for count, ecc in enumerate(eccs):
             ecc_extended = np.vstack([ecc, [self.max_range, 1]])
             interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind='previous')
-            self.representation += interpolator(self.xs)
+            y_inter = interpolator(self.xs)
+            self.representation += y_inter
+            representation2 += y_inter*y_inter
         self.representation /= len(samples)
+        representation2 /= len(samples)
+        self.std = np.sqrt(representation2 - self.representation*self.representation)
         self.fitted = True
 
     def transform(self, samples):

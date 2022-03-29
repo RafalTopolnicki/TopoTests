@@ -40,7 +40,7 @@ class TopoTest:
         self.standarize = standarize
         self.scaling = scaling
         if method in ['mergegram', 'persistence']:
-            self.representation = representations.WassersteinDistance(n_jobs=-1,
+            self.representation = representations.WassasersteinDistance(n_jobs=-1,
                                                                       order=self.wasserstein_order,
                                                                       internal_p=self.wasserstein_p)
         if method == 'ecc':
