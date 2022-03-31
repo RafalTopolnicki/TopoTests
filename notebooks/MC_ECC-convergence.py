@@ -42,11 +42,11 @@ rvs = [MultivariateDistribution([st.norm(), st.norm(), st.norm()], label='N01xN0
        MultivariateDistribution([st.t(df=10), st.t(df=10), st.t(df=10)], label='T10xT10xT10'),
        MultivariateDistribution([st.logistic(), st.logistic(), st.logistic()], label='LogisticxLogisticxLogistic'),
        MultivariateDistribution([st.laplace(), st.laplace(), st.laplace()], label='LaplacexLaplacexLaplace'),
-       MultivariateDistribution([st.norm(), st.t(df=5), st.t(df=5)], label='N01xT5xT5'),
-       MultivariateDistribution([st.norm(), st.norm(), st.t(df=5)], label='N01xN01xT5'),
-       #MultivariateDistribution([GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
-       #                         GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
-       #                         GaussianMixture([-1, 1, 0], [1, 1, 2], [0.33, 0.33, 0.34])], label='GM1')
+       #MultivariateDistribution([st.norm(), st.t(df=5), st.t(df=5)], label='N01xT5xT5'),
+       #MultivariateDistribution([st.norm(), st.norm(), st.t(df=5)], label='N01xN01xT5'),
+       MultivariateDistribution([GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
+                                GaussianMixture([-1, 1, 0], [1, 1, 1], [0.33, 0.33, 0.34]),
+                                GaussianMixture([-1, 1, 0], [1, 1, 2], [0.33, 0.33, 0.34])], label='GM1')
                                 ]
 
 
@@ -78,12 +78,12 @@ if N == None:
 
 
 dim=3
-mc_samples = [50, 100, 200, 500, 1000, 2000, 5000, 10000]
+mc_samples = [50, 100, 200, 500, 1000, 1500, 2000, 3000, 4000, 5000, 7500, 10000]
 
 results = {}
 for mc_sample in mc_samples:
     out = run_ecc(N, rvs, mc_sample)
     results[mc_sample] = out
-    with open(f'results.3d/xx_ecc_convergence_{ecc_norm}_N={N}_scaling.pickle', 'wb') as f:
+    with open(f'results.3d/ecc_convergence_{ecc_norm}_N={N}_scaling.pickle', 'wb') as f:
         pickle.dump(results, f)
 
