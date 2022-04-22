@@ -45,9 +45,10 @@ def prune_contributions(contributions):
 class ecc_representation():
     def __init__(self, norm='sup', n_interpolation_points=100):
         self.representation = None
+        self.representation2 = None # this can be changed later on to representation2 (no self.)
+        self.xs = None
         self.std = None
         self.max_range = -np.Inf
-        self.xs = None
         self.n_interpolation_points = n_interpolation_points
         self.n_fitted = 0
         self.fitted = False
@@ -65,7 +66,7 @@ class ecc_representation():
             eccs.append(ecc)
         self.xs = np.sort(list(jumps))
         self.representation = self.xs * 0
-        representation2 = self.xs * 0
+        self.representation2 = self.xs * 0
         # extend all ecc so that it include the max_range
         # TODO: here we assume that the last value of ecc is always 1
         #       is that true?
@@ -74,10 +75,10 @@ class ecc_representation():
             interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind='previous')
             y_inter = interpolator(self.xs)
             self.representation += y_inter
-            representation2 += y_inter*y_inter
+            self.representation2 += y_inter*y_inter
         self.representation /= len(samples)
-        representation2 /= len(samples)
-        self.std = np.sqrt(representation2 - self.representation*self.representation)
+        self.representation2 /= len(samples)
+        self.std = np.sqrt(self.representation2 - self.representation*self.representation)
         self.fitted = True
 
     def transform(self, samples):
@@ -85,16 +86,18 @@ class ecc_representation():
             raise RuntimeError('Run fit() before transform()')
 
         dist = []
+        representations = []
         for count, sample in enumerate(samples):
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             ecc = np.vstack([ecc, [self.max_range, 1]])
             interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind='previous')
             representation = interpolator(self.xs)
+            representations.append(representation)
             if self.norm == 'l1':
                 dist.append(np.trapz(np.abs(representation-self.representation), x=self.xs))
             elif self.norm == 'l2':
                 dist.append(np.trapz((representation-self.representation)**2, x=self.xs))
             else:
                 dist.append(np.max(np.abs(representation-self.representation)))
-        return dist
+        return dist, representations
