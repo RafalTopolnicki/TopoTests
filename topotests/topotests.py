@@ -100,8 +100,8 @@ class TopoTest:
 
         signatures = [self.get_signature(sample) for sample in samples]
         self.representation_distance_predict, representation_test = self.representation.transform(signatures)
-        representation_test_skip = int(len(representation_test)/self.n_points_to_save)
-        self.representation_predict[label] = representation_test[::representation_test_skip]
+        representation_test_skip = int(len(representation_test[0])/self.n_points_to_save)
+        self.representation_predict[label] = [rep[::representation_test_skip] for rep in representation_test]
 
         if self.method != 'ecc':
             dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
