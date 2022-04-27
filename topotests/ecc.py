@@ -58,7 +58,7 @@ class ecc_representation():
         self.max_range = -np.Inf
         eccs = []
         jumps = set()
-        for count, sample  in enumerate(samples):
+        for count, sample in enumerate(samples):
             ecc = np.array(compute_ECC_contributions_alpha(sample))
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             jumps.update(ecc[:, 0])

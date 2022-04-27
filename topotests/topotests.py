@@ -46,6 +46,7 @@ class TopoTest:
                                                                       internal_p=self.wasserstein_p)
         if method == 'ecc':
             self.representation = ecc_representation(self.ecc_norm)
+        self.n_points_to_save = 1000
         self.representation_distance = None
         self.representation_threshold = None
         self.representation_distance_predict = None
@@ -99,7 +100,8 @@ class TopoTest:
 
         signatures = [self.get_signature(sample) for sample in samples]
         self.representation_distance_predict, representation_test = self.representation.transform(signatures)
-        self.representation_predict[label] = representation_test
+        representation_test_skip = int(len(representation_test)/self.n_points_to_save)
+        self.representation_predict[label] = representation_test[::representation_test_skip]
 
         if self.method != 'ecc':
             dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
@@ -131,6 +133,7 @@ class TopoTest:
         np.save(filename, self.representation_distance_predict)
 
     def save_representation(self, filename):
+        representation_test_skip = int(len(self.representation.xs)/self.n_points_to_save)
         with open(filename, 'wb') as fp:
             pickle.dump([self.representation.xs,
                          self.representation.representation,
@@ -138,6 +141,7 @@ class TopoTest:
                          self.representation.std,
                          self.representation_distance_predict, # sup values
                          self.representation_signature,
+                         self.representation.xs[::representation_test_skip],
                          self.representation_predict],
                         fp)
 
