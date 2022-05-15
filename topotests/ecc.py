@@ -56,7 +56,7 @@ class ecc_representation():
         self.norm = norm
         self.mode = mode
         self.approximate_n_trials = 100
-        self.approximate_points = 10000
+        self.approximate_points = 20000
 
     def fit(self, samples):
         self.max_range = -np.Inf
