@@ -244,6 +244,67 @@ def ks2d2s(Arr2D1, Arr2D2):
     return(d, prob)
 
 
+def ks2d1s(Arr2D, func2D, xlim=[], ylim=[]):
+    """ ks stands for Kolmogorov-Smirnov, 2d for 2 dimensional,
+    1s for 1 sample.
+    KS test for goodness-of-fit on one 2D sample and one 2D density
+    distribution. Tests the hypothesis that the data was generated
+    from the density distribution.
+    :param array Arr2D: 2D array of points/samples.
+    :param func2D: Density distribution. Could implement a function for
+    arrays in the future...
+    :param array xlim, ylim: Defines the domain for the numerical integration
+    necessary to compute the quadrant probabilities.
+    :returns: tuple of two floats. First, the two-sample K-S statistic.
+    If this value is higher than the significance level of the hypothesis,
+    it is rejected. Second, the significance level of *d*. Small values of
+    prob show that the two samples are significantly different.
+    """
+    if callable(func2D):
+        if len(inspect.getfullargspec(func2D)[0]) != 2:
+            raise TypeError('Input func2D is not a function with 2 input arguments')
+        pass
+    else:
+        raise TypeError('Input func2D is not a function')
+    if type(Arr2D).__module__+type(Arr2D).__name__ == 'numpyndarray':
+        pass
+    else:
+        raise TypeError('Input Arr2D is neither list nor numpyndarray')
+    print(Arr2D.shape)
+    if Arr2D.shape[1] > Arr2D.shape[0]:
+        Arr2D = Arr2D.copy().T
+    if Arr2D.shape[1] != 2:
+        raise TypeError('Input Arr2D is not 2D')
+    if xlim == []:
+        xlim.append(np.amin(Arr2D[:, 0]) -
+                    abs(np.amin(Arr2D[:, 0]) -
+                    np.amax(Arr2D[:, 0]))/10)
+        xlim.append(np.amax(Arr2D[:, 0]) -
+                    abs(np.amin(Arr2D[:, 0]) -
+                    np.amax(Arr2D[:, 0]))/10)
+    if ylim == []:
+        ylim.append(np.amin(Arr2D[:, 1]) -
+                    abs(np.amin(Arr2D[:, 1]) -
+                    np.amax(Arr2D[:, 1]))/10)
+
+        ylim.append(np.amax(Arr2D[:, 1]) -
+                    abs(np.amin(Arr2D[:, 1]) -
+                    np.amax(Arr2D[:, 1]))/10)
+    d = 0
+    for point in Arr2D:
+        fpp1, fmp1, fpm1, fmm1 = FuncQuads(func2D, point, xlim, ylim)
+        fpp2, fmp2, fpm2, fmm2 = CountQuads(Arr2D, point)
+        d = max(d, abs(fpp1-fpp2))
+        d = max(d, abs(fpm1-fpm2))
+        d = max(d, abs(fmp1-fmp2))
+        d = max(d, abs(fmm1-fmm2))
+    sqen = np.sqrt(len(Arr2D))
+    R1 = scipy.stats.pearsonr(Arr2D[:, 0], Arr2D[:, 1])[0]
+    RR = np.sqrt(1.0-R1**2)
+    prob = Qks(d*sqen/(1.+RR*(0.25-0.75/sqen)))
+    return d, prob
+
+
 def ks2d1s_fast(Arr2D, func2D, xlim=[], ylim=[]):
     """ ks stands for Kolmogorov-Smirnov, 2d for 2 dimensional,
     1s for 1 sample.

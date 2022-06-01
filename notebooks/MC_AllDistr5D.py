@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[6]:
+# In[3]:
 
 
 import numpy as np
@@ -22,7 +22,7 @@ import datetime
 import sys, getopt
 
 
-# In[2]:
+# In[4]:
 
 
 # split list l into m chunks
@@ -33,7 +33,7 @@ def chunks(l, m):
     return chunks
 
 
-# In[3]:
+# In[5]:
 
 
 # run KS it in parallell
@@ -45,6 +45,7 @@ def gof_test_process(subsamples):
     return ks
 
 def gof_test(samples, Dstar):
+    # SET HERE number of cores that will be used to run KS tests in parallel
     n_cores = 4 
     samples_chunks = chunks(samples, n_cores)
     with ProcessPoolExecutor() as executor:
@@ -56,22 +57,37 @@ def gof_test(samples, Dstar):
     return ks, results_flat
 
 
-# In[4]:
+# In[6]:
 
 
-def run_mc(N, rvs, Dstar):
+def run_ks(N, rvs, Dstar):
     global cdf_global
+    results = []
+    result_labels = ['true_distrib', 'alter_distrib', 'method', 'sign_level', 'mc_loops', 'Dstar', 'ks', 'ks_d']
+    for rv_true in rvs:
+        print(f'*KS {datetime.datetime.now()} N={N} RV={rv_true.label}')
+        cdf_global = rv_true.cdf
+        for rv_alter in rvs:
+            print(f'*KS {datetime.datetime.now()} N={N} RV={rv_true.label} {rv_alter.label}')
+            samples = [rv_alter.rvs(N) for i in range(mc_samples)]
+            ks, dvalues = gof_test(samples, Dstar=Dstar) #Dstar valid for alpha=0.05 N=100, see Justel Table 1
+            result = [rv_true.label, rv_alter.label, method, significance_level, mc_samples, Dstar, ks, dvalues]
+            results.append(result)
+            
+            # save results to .csv file
+            results_df = pd.DataFrame(results, columns=result_labels)
+            results_df.to_csv(f'{outputfile_basename}_N={N}.csv', index=False)
+    return results
+
+
+# In[35]:
+
+
+def run_mc(N, rvs):
     # generate representation for standard normal distribution
     topo_test = TopoTest(n=N, dim=dim, method=method, 
-                         wasserstein_p=wasserstein_p, wasserstein_order=wasserstein_order)
-    
+                         wasserstein_p=wasserstein_p, wasserstein_order=wasserstein_order, ecc_norm=ecc_norm)
     results = []
-    result_labels = ['true_distrib', 'alter_distrib', 'method', 'sign_level', 'wasserstein_p', 'wasserstein_order',
-                 'mc_loops', 'n_signature', 'n_test', 
-                 'topo_min', 'topo_mean', 'topo_max', 'topo_quantile',
-                     'ks', 'ks_d'
-                    ]
-    
     for rv_true in rvs:
         print(f'*** {datetime.datetime.now()} N={N} RV={rv_true.label}')
         topo_test.fit(rv=rv_true, n_signature=n_signature, n_test=n_test)
@@ -86,27 +102,36 @@ def run_mc(N, rvs, Dstar):
             # write representation distance matrix
             topo_test.save_predict_distance_matrix(outputfile_basename+f'_N={N}_{rv_true.label}-{rv_alter.label}_distance_matrix.npy')
             # aggregate results of topo tests
-            topo_min = np.mean(topo_out.min)
-            topo_mean = np.mean(topo_out.mean)
-            topo_max = np.mean(topo_out.max)
-            topo_quantile = np.mean(topo_out.quantile)
-            # collect results of KS test
-            cdf_global = rv_true.cdf
-            #ks, dvalues = gof_test(samples, Dstar=Dstar) #Dstar valid for alpha=0.05 N=100, see Justel Table 1 
-            ks, dvalues = [], []
-            # collect results of topo tests and goodness of fit (gof) tests
-            result = [rv_true.label, rv_alter.label, method, significance_level, wasserstein_p, wasserstein_order, 
-                      mc_samples, n_signature, n_test, 
-                      topo_min, topo_mean, topo_max, topo_quantile,
-                      ks, dvalues]
+            topo_aggr = {}
+            for key in topo_out.keys():
+                topo_aggr[f'topo_{key}'] = np.mean(topo_out[key])
+            # save thresholds to the csv as well
+            topo_thres = {}
+            for key in topo_test.representation_threshold.keys():
+                topo_thres[f'thres_{key}'] = topo_test.representation_threshold[key]
+
+            # the is really no point in determining labels in each loop as they are constant, but keep it as it is for simplicity
+            result_labels = ['true_distrib', 'alter_distrib', 'method', 'sign_level', 'wasserstein_p', 'wasserstein_order', 'ecc_norm',
+                 'mc_loops', 'n_signature', 'n_test', *topo_thres.keys(), *topo_aggr.keys()]
+
+            result = [rv_true.label, rv_alter.label, method, significance_level, wasserstein_p, wasserstein_order, ecc_norm,
+                      mc_samples, n_signature, n_test, *topo_thres.values(), *topo_aggr.values()]
             results.append(result)
+            
             # save results to .csv file
-            results_df = pd.DataFrame(results, columns=result_labels)
-            results_df.to_csv(f'{outputfile_basename}_N={N}.csv')
+            results_df = pd.DataFrame([result], columns=result_labels)
+            #results_df.reset_index(drop=True, inplace=True)
+            try:
+                df_old = pd.read_csv(f'{outputfile_basename}_n={N}_M={n_signature}_m={n_test}.csv')
+                #df_old.reset_index(drop=True, inplace=True)
+                results_df = pd.concat([df_old, results_df], axis=0, ignore_index=True)
+            except:
+                pass
+            results_df.to_csv(f'{outputfile_basename}_n={N}_M={n_signature}_m={n_test}.csv', index=False)
     return results
 
 
-# In[14]:
+# In[8]:
 
 
 rvs = [MultivariateDistribution([st.norm(), st.norm(), st.norm(), st.norm(), st.norm()], label='N01xN01xN01xN01xN01'),
@@ -126,20 +151,53 @@ rvs = [MultivariateDistribution([st.norm(), st.norm(), st.norm(), st.norm(), st.
 
 argv = sys.argv[1:]
 method = None
+ecc_norm = None
+n_signature = None
+n_test = None
+mc_samples = None
+n_sample = None 
+
 try:
-    opts, args = getopt.getopt(argv,"m:")
+    opts, args = getopt.getopt(argv,"t:M:n:m:C:e:")
 except getopt.GetoptError:
-    print('MC_AllDistr5D.py -m <method>')
+    print('MC_AllDistr3D.py -t -M -n -m -C -e')
     sys.exit(2)
 for opt, arg in opts:
-    if opt in ('-m'):
+    if opt in ('-t'):
         method = arg
+    if opt in ('-e'):
+        ecc_norm = arg
+    if opt in ('-M'):
+        n_signature = int(arg)
+    if opt in ('-m'):
+        n_test = int(arg)
+    if opt in ('-n'):
+        n_sample = int(arg)
+    if opt in ('-C'):
+        mc_samples = int(arg)
 
 if method == None:
+    raise ValueError('-t parameter missing')
+if n_signature == None:
+    raise ValueError('-M parameter missing')
+if n_test == None:
     raise ValueError('-m parameter missing')
+if mc_samples == None:
+    raise ValueError('-C parameter missing')
 
 
-# In[16]:
+# In[13]:
+
+
+# method='ecc'
+# ecc_norm='sup'
+# n_signature=25
+# n_test=25
+# mc_samples=100
+# n_sample=100
+
+
+# In[26]:
 
 
 # set random numbers generator seed to have reproducibale results
@@ -147,28 +205,26 @@ np.random.seed(1)
 
 cdf_global = None
 
-# set simulation parameters
-Ns = [50, 100, 200]
-Dstars = [0.151494, 0.110596, 0.086214, 0.064754] # values obtained from separate KS simulations
-mc_samples = 250
-n_signature = n_test = 750
-
-# Ns = [20]
-# Dstars = [0.151494]
-# mc_samples = 10
-# n_signature = n_test = 25
-
 dim = 5
 significance_level = 0.05
 wasserstein_p=1
 wasserstein_order=1
 
-outputfile_basename = f'results.{dim}d/{method}_{wasserstein_p}_{wasserstein_order}'
+dirname = f'results.{dim}d_convergence'
+
+if method not in ['ecc', 'ks']:
+    outputfile_basename = f'{dirname}/{method}_{wasserstein_p}_{wasserstein_order}'
+elif method == 'ecc':
+    outputfile_basename = f'{dirname}/{method}_{ecc_norm}'
+elif method == 'ks':
+    outputfile_basename = f'{dirname}/{method}'
 
 
 # In[ ]:
 
 
-for N, Dstar in zip(Ns, Dstars):
-    results = run_mc(N=N, rvs=rvs, Dstar=Dstar)
+if method != 'ks':
+    results = run_mc(N=n_sample, rvs=rvs)
+else:
+    results = run_ks(N=n_sample, rvs=rvs, Dstar=Dstar)
 

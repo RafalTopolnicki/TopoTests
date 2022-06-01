@@ -3,6 +3,7 @@ from gudhi import representations
 
 from mergegram import mergegram
 from ecc import *
+import pickle
 
 distance_aggregators = namedtuple('distance_aggregators', 'min mean max quantile')
 
@@ -26,9 +27,9 @@ class TopoTest:
         :param wasserstein_order:
         """
 
-        if method not in ['mergegram', 'persistence', 'ecc']:
+        if method not in ['mergegram', 'persistence', 'ecc', 'ecc-exact']:
             raise ValueError(f'Incorrect method. Found method={method}. Possible options are '
-                             f'"mergegram", "persistence", "ecc"')
+                             f'"mergegram", "persistence", "ecc", "ecc-exact"')
         self.fitted = False
         self.sample_pts_n = n
         self.sample_pt_dim = dim
@@ -40,14 +41,20 @@ class TopoTest:
         self.standarize = standarize
         self.scaling = scaling
         if method in ['mergegram', 'persistence']:
-            self.representation = representations.WassersteinDistance(n_jobs=-1,
+            self.representation = representations.WassasersteinDistance(n_jobs=-1,
                                                                       order=self.wasserstein_order,
                                                                       internal_p=self.wasserstein_p)
         if method == 'ecc':
             self.representation = ecc_representation(self.ecc_norm)
+        if method == 'ecc-exact':
+            self.representation = ecc_representation(self.ecc_norm, mode='exact')
+
+        self.n_points_to_save = 1000
         self.representation_distance = None
         self.representation_threshold = None
         self.representation_distance_predict = None
+        self.representation_signature = None
+        self.representation_predict = {}
 
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample
@@ -62,9 +69,11 @@ class TopoTest:
         signature_samples = [self.get_signature(sample) for sample in samples]
         signature_samples_test = [self.get_signature(sample) for sample in samples_test]
         self.representation.fit(signature_samples)
-        self.representation_distance = self.representation.transform(signature_samples_test)
+        self.representation_distance, self.representation_signature = self.representation.transform(signature_samples_test)
+        representation_test_skip = int(len(self.representation_signature[0])/self.n_points_to_save)
+        self.representation_signature = self.representation_signature[::representation_test_skip]
 
-        if self.method != 'ecc':
+        if self.method not in ['ecc', 'ecc-exact']:
             dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance)
             self.representation_threshold = {'min': np.quantile(dmin, 1 - self.significance_level),
                                              'mean': np.quantile(dmean, 1-self.significance_level),
@@ -73,7 +82,7 @@ class TopoTest:
                                              }
         else:
             self.representation_threshold \
-                = {'mean': np.quantile(self.representation_distance, 1 - self.significance_level) }
+                = {'mean': np.quantile(self.representation_distance, 1 - self.significance_level)}
         self.fitted = True
 
     def aggregate_distances(self, distance_matrix):
@@ -83,7 +92,7 @@ class TopoTest:
         dq = np.quantile(distance_matrix, q=0.9, axis=1)
         return dmin, dmean, dmax, dq
 
-    def predict(self, samples):
+    def predict(self, samples, label):
         if not self.fitted:
             raise RuntimeError('Cannot run predict(). Run fit() first!')
         if len(samples) == 1:
@@ -95,9 +104,11 @@ class TopoTest:
             samples = [sample_standarize(sample) for sample in samples]
 
         signatures = [self.get_signature(sample) for sample in samples]
-        self.representation_distance_predict = self.representation.transform(signatures)
+        self.representation_distance_predict, representation_test = self.representation.transform(signatures)
+        representation_test_skip = int(len(representation_test[0])/self.n_points_to_save)
+        self.representation_predict[label] = [rep[::representation_test_skip] for rep in representation_test]
 
-        if self.method != 'ecc':
+        if self.method not in ['ecc', 'ecc-exact']:
             dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
             return {'min': dmin < self.representation_threshold['min'],
                     'mean': dmean < self.representation_threshold['mean'],
@@ -125,6 +136,19 @@ class TopoTest:
 
     def save_predict_distance_matrix(self, filename):
         np.save(filename, self.representation_distance_predict)
+
+    def save_representation(self, filename):
+        representation_test_skip = int(len(self.representation.xs)/self.n_points_to_save)
+        with open(filename, 'wb') as fp:
+            pickle.dump([self.representation.xs,
+                         self.representation.representation,
+                         self.representation.representation2,
+                         self.representation.std,
+                         self.representation_distance_predict, # sup values
+                         self.representation_signature, # what is that?
+                         self.representation.xs[::representation_test_skip],
+                         self.representation_predict],
+                        fp)
 
     def save_model(self):
         pass
