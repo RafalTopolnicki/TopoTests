@@ -145,7 +145,7 @@ class TopoTest:
                          self.representation.representation2,
                          self.representation.std,
                          self.representation_distance_predict, # sup values
-                         self.representation_signature,
+                         self.representation_signature, # what is that?
                          self.representation.xs[::representation_test_skip],
                          self.representation_predict],
                         fp)
