@@ -13,7 +13,7 @@ def mergegram(data: np.array) -> np.array:
     """
     dm = distance_matrix(x=data, y=data, p=2)
     dists = squareform(dm)
-    hls = hierarchy.linkage(dists, 'single')
+    hls = hierarchy.linkage(dists, "single")
     # get mergerogram form linkage matrix
     npts = data.shape[0]
     last_cluster_id = npts - 1

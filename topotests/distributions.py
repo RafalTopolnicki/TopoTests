@@ -8,7 +8,7 @@ class GaussianMixture:
         # scales - vector of scale parameters
         # probas - vector of mixture coefficients
         if not (len(locations) == len(scales) and len(scales) == len(probas)):
-            raise ValueError('Wrong number of components for Gaussian Mixture')
+            raise ValueError("Wrong number of components for Gaussian Mixture")
         self.locations = locations
         self.scales = scales
         self.n_gauss = len(locations)
@@ -24,15 +24,15 @@ class GaussianMixture:
         return X
 
     def cdf(self, x):
-        cdf=0
+        cdf = 0
         for p, rv in zip(self.probas, self.gauss_rv):
-            cdf += p*rv.cdf(x)
+            cdf += p * rv.cdf(x)
         return cdf
 
     def pdf(self, x):
-        pdf=0
+        pdf = 0
         for p, rv in zip(self.probas, self.gauss_rv):
-            pdf += p*rv.pdf(x)
+            pdf += p * rv.pdf(x)
         return pdf
 
 
@@ -44,11 +44,10 @@ class AbsoluteDistribution:
         return np.abs(self.rv.rvs(size))
 
     def cdf(self, x):
-        return 2*self.rv.cdf(x) - 1
+        return 2 * self.rv.cdf(x) - 1
 
     def pdf(self, x):
-        return 2*self.rv.pdf(x)
-
+        return 2 * self.rv.pdf(x)
 
 
 class MultivariateDistribution:
