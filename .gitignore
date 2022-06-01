@@ -1,5 +1,3 @@
 *.csv
 *.pyc
 topotests/__pycache__
-notebooks/.ipynb_checkpoints
-notebooks/results.*/*.npy

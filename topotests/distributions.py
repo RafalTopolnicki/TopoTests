@@ -80,3 +80,21 @@ class MultivariateDistribution:
         for pt, univariate in zip(pts, self.univariates):
             pdf *= univariate.pdf(pt)
         return pdf
+
+
+class MultivariateGaussian:
+    def __init__(self, dim, a, label=None):
+        self.dim = dim
+        self.label = label
+        self.cov = np.ones((dim, dim)) * a + np.identity(dim) * (1 - a)
+        self.mean = [0] * dim
+        self.rv = st.multivariate_normal(mean=self.mean, cov=self.cov)
+
+    def rvs(self, size):
+        return self.rv.rvs(size)
+
+    def cdf(self, pts):
+        return self.rv.cdf(pts)
+
+    def pdf(self, pts):
+        return self.rv.pdf(pts)
