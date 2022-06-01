@@ -13,7 +13,6 @@ commandsfile="commands.txt"
 method="approximate"
 alpha="0.05"
 M=1000
-norm="sup"
 nsignature=1000
 ntest=1000
 # create file with commands that will be run
@@ -26,7 +25,10 @@ for dim in 1 2 3 5
 do
   for n in 100 250 500 1000 2500 5000
   do
-    echo "python ${scriptname} --n ${n} --dim ${dim} --n_signature ${nsignature} --n_test ${ntest} --M ${M} --output_dp ${outputdp} --norm ${norm} --alpha ${alpha} --method ${method}" >> ${commandsfile}
+    for norm in "sup" "l1"
+    do
+      echo "python ${scriptname} --n ${n} --dim ${dim} --n_signature ${nsignature} --n_test ${ntest} --M ${M} --output_dp ${outputdp} --norm ${norm} --alpha ${alpha} --method ${method}" >> ${commandsfile}
+    done # end norm-loop
   done # end n-loop
 done # end dim-loop
 
