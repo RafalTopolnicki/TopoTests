@@ -16,6 +16,7 @@ class TopoTest_onesample:
         significance_level: float = 0.05,
         norm="sup",
         method="approximate",
+        complex_type="alpha",
         scaling=1,
         standarize=False,
     ):
@@ -30,12 +31,13 @@ class TopoTest_onesample:
         self.norm = norm
         self.standarize = standarize
         self.scaling = scaling
+        self.complex_type = complex_type
         if method not in ["approximate", "exact"]:
             raise ValueError(f"method must be approximate or exact, got {method} instead")
         if method == "approximate":
-            self.representation = ecc_representation(self.norm, mode="approximate")
+            self.representation = ecc_representation(self.norm, mode="approximate", complex_type=self.complex_type)
         if method == "exact":
-            self.representation = ecc_representation(self.norm, mode="exact")
+            self.representation = ecc_representation(self.norm, mode="exact", complex_type=self.complex_type)
 
         self.n_points_to_save = 5000
         self.representation_distance = None
