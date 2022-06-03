@@ -10,7 +10,7 @@ def compute_ECC_contributions(point_cloud, complex_type='alpha'):
     if complex_type == 'alpha':
         comp = gd.AlphaComplex(points=point_cloud)
     else:
-        comp = gd.RipsComplex(points=point_cloud)
+        comp = gd.RipsComqplex(points=point_cloud)
 
     simplex_tree = comp.create_simplex_tree()
 
@@ -45,6 +45,8 @@ class ecc_representation:
         self.complex_type = complex_type
 
     def fit(self, samples):
+        # TODO: this implementation is memomy-ineffcient - we don't have to store all ecc to compute the mean
+        # TODO: this becomes a problem for Rips
         self.max_range = -np.Inf
         eccs = []
         jumps = set()
