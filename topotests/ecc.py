@@ -13,13 +13,17 @@ def compute_ECC_contributions_alpha(point_cloud):
 
     for s, f in simplex_tree.get_filtration():
         dim = len(s) - 1
-        val = ecc.get(f, 0) + (-1) ** dim
-        if val > 0:
-            ecc[f] = ecc.get(f, 0) + (-1) ** dim
-    # TODO: do we really need to sort?
-    ecc = np.array(sorted(list(ecc.items()), key=lambda x: x[0]))
-    ecc[:, 1] = np.cumsum(ecc[:, 1])
-    return ecc
+        ecc[f] = ecc.get(f, 0) + (-1) ** dim
+
+    # remove the contributions that are 0
+    to_del = []
+    for key in ecc:
+        if ecc[key] == 0:
+            to_del.append(key)
+    for key in to_del:
+        del ecc[key]
+
+    return sorted(list(ecc.items()), key=lambda x: x[0])
 
 
 class ecc_representation:

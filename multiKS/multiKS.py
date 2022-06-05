@@ -3,6 +3,7 @@ import numpy as np
 import scipy.stats
 from itertools import combinations
 
+
 def IntCdf(fun, p_high, p_low):
     """
     Calculate the integral of probability density function over a hyper-rectangle.
@@ -18,17 +19,17 @@ def IntCdf(fun, p_high, p_low):
     n_dim = len(p_high)
     for i in range(n_dim):
         if p_high[i] < p_low[i]:
-            raise ValueError('p_high must be greater than p_low component-wise!')
+            raise ValueError("p_high must be greater than p_low component-wise!")
     value = fun(p_high)
     for idx_len in range(1, n_dim):
         factor = (-1) ** idx_len
         change_idxs = list(combinations(range(n_dim), idx_len))
-        #print(change_idxs, factor)
+        # print(change_idxs, factor)
         for change_idx in change_idxs:
             p = p_high.copy()
             for change_id in change_idx:
                 p[change_id] = p_low[change_id]
-            #print(f'val f: {fun(p)} {p}')
+            # print(f'val f: {fun(p)} {p}')
             value += factor * fun(p)
 
     value += (-1) ** n_dim * fun(p_low)
@@ -56,7 +57,7 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
     theoretical_values = []
     data_values = []
 
-    for i in range(2 ** n_dim):
+    for i in range(2**n_dim):
         # iterate over all possible orthants
         bin_mask = bin(i)[2:].zfill(n_dim)
         p_low = [None] * n_dim
@@ -66,7 +67,7 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
         # print(filtration_mask)
 
         for id_b, b in enumerate(bin_mask):
-            if b == '1':
+            if b == "1":
                 p_high[id_b] = axis_high[id_b]
                 p_low[id_b] = point[id_b]
                 filtration_mask = np.logical_and(filtration_mask, arr_nd[:, id_b] > point[id_b])
@@ -82,6 +83,7 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
     d = np.max(np.abs(np.array(theoretical_values) - np.array(data_values)))
     return d
 
+
 def multiKS(arr_nd, cdf_nd):
     """
     Multidimension one-sample Kolmogorov-Smirnov test.
@@ -96,12 +98,11 @@ def multiKS(arr_nd, cdf_nd):
     # for unknown reason Cumulative distribution functions implemented in Scipy
     # does not work properly with np.Inf and -np.Inf
     # this is an ugly bypass
-    #numeric_low = -1e4
-    #numeric_high = 1e4
-    numeric_low = np.min(arr_nd, axis=0)-20
-    numeric_high = np.max(arr_nd, axis=0)+20
+    # numeric_low = -1e4
+    # numeric_high = 1e4
+    numeric_low = np.min(arr_nd, axis=0) - 20
+    numeric_high = np.max(arr_nd, axis=0) + 20
     d_ks = []
     for point in arr_nd:
-        d_ks.append(orthant(arr_nd=arr_nd, func=cdf_nd, point=point,
-                            axis_low=numeric_low, axis_high=numeric_high))
+        d_ks.append(orthant(arr_nd=arr_nd, func=cdf_nd, point=point, axis_low=numeric_low, axis_high=numeric_high))
     return np.max(d_ks)

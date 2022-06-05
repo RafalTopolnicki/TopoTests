@@ -83,8 +83,49 @@ class TopoTest_onesample:
     def save_predict_distance_matrix(self, filename):
         np.save(filename, self.representation_distance_predict)
 
-    def save_model(self):
-        pass
 
-    def load_model(self):
-        pass
+def TopoTest_twosample(X1, X2, norm="sup", loops=100):
+    n_grids = 2000
+    n1 = X1.shape[0]
+    n2 = X2.shape[0]
+
+    def _get_ecc(X, epsmax=None):
+        ecc = np.array(compute_ECC_contributions_alpha(X))
+        ecc[:, 1] = np.cumsum(ecc[:, 1])
+        if epsmax is not None:
+            ecc = np.vstack([ecc, [epsmax, 1]])
+        return ecc
+
+    def _dist_ecc(ecc1, ecc2):
+        # ecc1 and ecc2 are of equal length and have jumps in the same location
+        if norm == "sup":
+            return np.max(np.abs(ecc1[:, 1] - ecc2[:, 1]))
+        if norm == "l1":
+            return np.trapz(np.abs(ecc1[:, 1] - ecc2[:, 1]), x=ecc1[:, 0])
+        if norm == "l2":
+            return np.trapz((ecc1[:, 1] - ecc2[:, 1]) ** 2, x=ecc1[:, 0])
+
+    def _interpolate(ecc, epsgrid):
+        interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind="previous")
+        y = interpolator(epsgrid)
+        return np.column_stack([epsgrid, y])
+
+    ecc1 = _get_ecc(X1)
+    ecc2 = _get_ecc(X2)
+    epsmax = max(np.max(ecc1[:, 0]), np.max(ecc2[:, 0]))
+    epsgrid = np.linspace(0, epsmax, n_grids)
+    ecc1 = _interpolate(_get_ecc(X1, epsmax), epsgrid)
+    ecc2 = _interpolate(_get_ecc(X2, epsmax), epsgrid)
+    D = _dist_ecc(ecc1, ecc2)
+
+    X12 = np.vstack([X1, X2])
+    distances = []
+    for _ in range(loops):
+        inds = np.random.permutation(n1 + n2)
+        x1 = X12[inds[:n1]]
+        x2 = X12[inds[n1:]]
+        y1 = _interpolate(_get_ecc(x1, epsmax), epsgrid=epsgrid)
+        y2 = _interpolate(_get_ecc(x2, epsmax), epsgrid=epsgrid)
+        distances.append(_dist_ecc(y1, y2))
+    pval = np.mean(distances > D)
+    return D, pval, distances
