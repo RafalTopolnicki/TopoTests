@@ -35,7 +35,7 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 
 
 def run_mc(rvs, args):
-    outputfilename = f"dim={args.dim}_n={args.n}_norm={args.norm}_method={args.method}_complex={args.complex_type}.csv"
+    outputfilename = f"dim={args.dim}_n={args.n}_norm={args.norm}_method={args.method}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     for rv_true in rvs:
@@ -46,7 +46,6 @@ def run_mc(rvs, args):
             method=args.method,
             norm=args.norm,
             significance_level=args.alpha,
-            complex_type=args.complex_type
         )
         # train TopoTest
         topo_test.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
