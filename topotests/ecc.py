@@ -5,14 +5,9 @@ import random
 
 # computes each simplex contribution to the ECC
 # function by Davide
-def compute_ECC(point_cloud, complex_type='alpha'):
-
-    if complex_type == 'alpha':
-        comp = gd.AlphaComplex(points=point_cloud)
-    else:
-        comp = gd.RipsComplex(points=point_cloud)
-
-    simplex_tree = comp.create_simplex_tree()
+def compute_ECC_contributions_alpha(point_cloud):
+    alpha_complex = gd.AlphaComplex(points=point_cloud)
+    simplex_tree = alpha_complex.create_simplex_tree()
 
     ecc = {}
 
@@ -28,17 +23,17 @@ def compute_ECC(point_cloud, complex_type='alpha'):
 
 
 class ecc_representation:
-    def __init__(self, norm="sup", mode="approximate", complex_type="alpha"):
+    def __init__(self, norm="sup", n_interpolation_points=100, mode="approximate"):
         self.representation = None
         self.xs = None
         self.max_range = -np.Inf
+        self.n_interpolation_points = n_interpolation_points
         self.n_fitted = 0
         self.fitted = False
         self.norm = norm
         self.mode = mode
         self.approximate_n_trials = 100
         self.approximate_points = 20000
-        self.complex_type = complex_type
 
     def fit(self, samples):
         # TODO: this implementation is memomy-ineffcient - we don't have to store all ecc to compute the mean
@@ -48,7 +43,8 @@ class ecc_representation:
         jumps = set()
         if self.mode == "exact":
             for sample in samples:
-                ecc = compute_ECC(sample, complex_type=self.complex_type)
+                ecc = np.array(compute_ECC_contributions_alpha(sample))
+                ecc[:, 1] = np.cumsum(ecc[:, 1])
                 jumps.update(ecc[:, 0])  # FIXME: ecc[:, 0] is stored in eccs anyway
                 self.max_range = max(self.max_range, ecc[-1, 0])
                 eccs.append(ecc)
@@ -67,7 +63,7 @@ class ecc_representation:
             trial_samples = random.choices(samples, k=approximate_n_trials)
             jumps = set()
             for sample in trial_samples:
-                ecc = compute_ECC(sample, complex_type=self.complex_type)
+                ecc = np.array(compute_ECC_contributions_alpha(sample))
                 self.max_range = max([self.max_range, ecc[-1, 0]])
                 jumps.update(ecc[:, 0])
             jumps = np.sort(list(jumps))
@@ -77,7 +73,8 @@ class ecc_representation:
             self.representation = self.xs * 0
             # interpolate ECC curves on the grid
             for sample in samples:
-                ecc = compute_ECC(sample, complex_type=self.complex_type)
+                ecc = np.array(compute_ECC_contributions_alpha(sample))
+                ecc[:, 1] = np.cumsum(ecc[:, 1])
                 # cut ecc on self.max_range
                 range_ind = ecc[:, 0] < self.max_range
                 ecc = ecc[range_ind, :]
@@ -96,7 +93,8 @@ class ecc_representation:
         dist = []
         representations = []
         for sample in samples:
-            ecc = compute_ECC(sample, complex_type=self.complex_type)
+            ecc = np.array(compute_ECC_contributions_alpha(sample))
+            ecc[:, 1] = np.cumsum(ecc[:, 1])
             range_ind = ecc[:, 0] < self.max_range
             ecc = ecc[range_ind, :]
             ecc = np.vstack([ecc, [self.max_range, 1]])

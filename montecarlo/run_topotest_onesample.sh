@@ -11,7 +11,6 @@ commandsfile="commands.txt"
 
 # set parameters that are the same for all runs
 method="approximate"
-complex_type="alpha"
 alpha="0.05"
 M=1000
 nsignature=1000
@@ -28,7 +27,7 @@ do
   do
     for norm in "sup" "l1"
     do
-      echo "python ${scriptname} --n ${n} --dim ${dim} --n_signature ${nsignature} --n_test ${ntest} --M ${M} --output_dp ${outputdp} --norm ${norm} --alpha ${alpha} --method ${method}" --complex_type ${complex_type} >> ${commandsfile}
+      echo "python ${scriptname} --n ${n} --dim ${dim} --n_signature ${nsignature} --n_test ${ntest} --M ${M} --output_dp ${outputdp} --norm ${norm} --alpha ${alpha} --method ${method}" >> ${commandsfile}
     done # end norm-loop
   done # end n-loop
 done # end dim-loop

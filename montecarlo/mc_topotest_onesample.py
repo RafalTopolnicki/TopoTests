@@ -20,7 +20,6 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
         "n": args.n,
         "dim": args.dim,
         "norm": args.norm,
-        "complex_type": args.complex_type,
         "n_signature": args.n_signature,
         "n_test": args.n_test,
         "M": args.M,
@@ -108,14 +107,6 @@ def main():
         choices=["sup", "l1", "l2"],
         help="norm used to compute distance between ECCs",
     )
-    parser.add_argument(
-        "--complex_type",
-        type=str,
-        default="alpha",
-        choices=["alpha", "rips"],
-        help="type of complex used to build the simplex tree",
-    )
-
     args = parser.parse_args()
 
     rvs = get_random_variables(dim=args.dim)
