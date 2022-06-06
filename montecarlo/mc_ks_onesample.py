@@ -31,10 +31,10 @@ def run_mc(rvs, args):
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     for rv_true in rvs:
-        logging.info(f"Start true distribution: {rv_true.label} n={args.n} dim={args.dim}")
+        logging.info(f"KS-1S: Start true distribution: {rv_true.label} n={args.n} dim={args.dim}")
         # train TopoTest
         for rv_alter in rvs:
-            logging.info(f"Start distribution true: {rv_true.label} alter: {rv_alter.label}")
+            logging.info(f"KS-1S: Start distribution true: {rv_true.label} alter: {rv_alter.label}")
             # generate samples from alternative distributions
             dkss = []
             # this can be run in parallel - see e.g. MC_AllDistr3D notebook

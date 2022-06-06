@@ -1,6 +1,5 @@
-import sys
 import numpy as np
-import scipy.stats
+from scipy import stats
 from itertools import combinations
 
 
@@ -17,21 +16,21 @@ def IntCdf(fun, p_high, p_low):
     :return: a integral of probability density function over the hyper-rectangle
     """
     n_dim = len(p_high)
-    for i in range(n_dim):
-        if p_high[i] < p_low[i]:
-            raise ValueError("p_high must be greater than p_low component-wise!")
+#    for i in range(n_dim):
+#        if p_high[i] < p_low[i]:
+#            raise ValueError('p_high must be greater than p_low component-wise!')
+    if n_dim == 1: # 1-d data must be treated as float (no list od len 1) due to implementation of the cdf
+        p_high = p_high[0]
+        p_low = p_low[0]
     value = fun(p_high)
     for idx_len in range(1, n_dim):
         factor = (-1) ** idx_len
         change_idxs = list(combinations(range(n_dim), idx_len))
-        # print(change_idxs, factor)
         for change_idx in change_idxs:
             p = p_high.copy()
             for change_id in change_idx:
                 p[change_id] = p_low[change_id]
-            # print(f'val f: {fun(p)} {p}')
             value += factor * fun(p)
-
     value += (-1) ** n_dim * fun(p_low)
     return value
 
@@ -79,7 +78,6 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
         # get values of theoretical cdf over the orthant
         theoretical_values.append(IntCdf(func, p_high, p_low))
         data_values.append(np.sum(filtration_mask) / n_data)
-        # print(theoretical_values)
     d = np.max(np.abs(np.array(theoretical_values) - np.array(data_values)))
     return d
 
@@ -95,6 +93,10 @@ def multiKS(arr_nd, cdf_nd):
                     It must takes n-element list as an argument
     :return: Value of KS statistic.
     """
+    # for 1d data the Scipy implementation of KS test is 20-200x faster - use it
+    if len(arr_nd.shape) == 1:
+        ks_out = stats.ks_1samp(arr_nd, cdf_nd)
+        return ks_out[0]
     # for unknown reason Cumulative distribution functions implemented in Scipy
     # does not work properly with np.Inf and -np.Inf
     # this is an ugly bypass

@@ -37,9 +37,9 @@ def run_mc(rvs, args):
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     for rv_true in rvs:
-        logging.info(f"Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
+        logging.info(f"TT-2s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
         for rv_alter in rvs:
-            logging.info(f"Start distribution true: {rv_true.label} alter: {rv_alter.label}")
+            logging.info(f"TT-2s: Start distribution true: {rv_true.label} alter: {rv_alter.label}")
             tt_threshold = []
             tt_pval = []
             for mcloop in range(args.M):

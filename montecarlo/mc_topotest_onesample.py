@@ -39,7 +39,7 @@ def run_mc(rvs, args):
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     for rv_true in rvs:
-        logging.info(f"Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
+        logging.info(f"TT-1s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
         topo_test = TopoTest_onesample(
             n=args.n,
             dim=args.dim,
@@ -50,7 +50,7 @@ def run_mc(rvs, args):
         # train TopoTest
         topo_test.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
         for rv_alter in rvs:
-            logging.info(f"Start distribution true: {rv_true.label} alter: {rv_alter.label}")
+            logging.info(f"TT-1s: Start distribution true: {rv_true.label} alter: {rv_alter.label}")
             # generate samples from alternative distributions
             samples = [rv_alter.rvs(args.n) for i in range(args.M)]
             # get list of H0 acceptances and p-values
