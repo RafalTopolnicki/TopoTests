@@ -94,7 +94,7 @@ def multiKS(arr_nd, cdf_nd):
     :return: Value of KS statistic.
     """
     # for 1d data the Scipy implementation of KS test is 20-200x faster - use it
-    if len(arr_nd.shape) == 1:
+    if len(arr_nd.shape) == 1 or arr_nd.shape[1] == 1:
         ks_out = stats.ks_1samp(arr_nd, cdf_nd)
         return ks_out[0]
     # for unknown reason Cumulative distribution functions implemented in Scipy
