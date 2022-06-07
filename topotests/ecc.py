@@ -25,7 +25,6 @@ def compute_ECC_contributions_alpha(point_cloud):
 
     return sorted(list(ecc.items()), key=lambda x: x[0])
 
-
 class ecc_representation:
     def __init__(self, norm="sup", n_interpolation_points=100, mode="approximate"):
         self.representation = None
