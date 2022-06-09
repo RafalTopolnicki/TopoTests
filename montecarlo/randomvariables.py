@@ -88,7 +88,7 @@ def get_random_variables(dim):
                 [st.norm(), st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5)], label="N01xT5xT5xT4xT5"
             ),
             MultivariateDistribution(
-                [st.norm(), st.norm(), st.t(df=5), st.t(df=5), st.t(df=5)], label="N01xN01xT5xT5xT5"
+                [st.norm(), st.norm(), st.t(df=5), st.t(df=5), st.t(df=5)], label="-N01xN01xT5xT5xT5"
             ),
             MultivariateDistribution(
                 [st.norm(), st.norm(), st.norm(), st.norm(), st.t(df=5)], label="N01xN01xN01xN01xT5"
@@ -98,6 +98,31 @@ def get_random_variables(dim):
             ),
             MultivariateDistribution(
                 [st.norm(), st.norm(), st.laplace(), st.laplace(), st.laplace()], label="N01xN01xLapxLapxLap"
+            ),
+        ]
+    if dim == 7:
+        rvs = [
+            MultivariateDistribution(
+                [st.norm(), st.norm(), st.norm(), st.norm(), st.norm(), st.norm(), st.norm()],
+                label="N01xN01xN01xN01xN01"
+            ),
+            MultivariateGaussian(dim=7, a=0.1, label="MultiGauss0.1"),
+            MultivariateGaussian(dim=7, a=0.5, label="MultiGauss0.5"),
+            MultivariateDistribution(
+                [st.t(df=3), st.t(df=3), st.t(df=3), st.t(df=3), st.t(df=3), st.t(df=3), st.t(df=3)],
+                label="T3xT3xT3xT3xT3xT3xT3"
+            ),
+            MultivariateDistribution(
+                [st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5)],
+                label="T5xT5xT5xT5xT5xT5xT5"
+            ),
+            MultivariateDistribution(
+                [st.norm(), st.norm(), st.norm(), st.t(df=5), st.t(df=5), st.t(df=5), st.t(df=5)],
+                label="N01xN01xN01xT5xT5xT5xT5"
+            ),
+            MultivariateDistribution(
+                [st.norm(), st.norm(), st.norm(), st.norm(), st.laplace(), st.laplace(), st.laplace()],
+                label="N01xN01xN01xN01xLapxLapxLap"
             ),
         ]
     if len(rvs) == 0:
