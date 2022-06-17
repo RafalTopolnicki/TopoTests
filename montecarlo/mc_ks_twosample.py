@@ -10,7 +10,7 @@ sys.path.append("../multiKS/")
 sys.path.append("../2DKS_fast/")
 import pandas as pd
 import logging
-from multiKS import multiKS
+from multiKS import multiKS2s
 from KS2Dfast import ks2d2s
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
@@ -50,8 +50,10 @@ def run_mc(rvs, args):
                 sample1 = rv_alter.rvs(args.n)
                 if args.dim == 1:
                     dks, pval = stats.ks_2samp(sample0[:, 0], sample1[:, 0])
-                else:
+                elif args.dim == 2:
                     dks, pval = ks2d2s(sample0, sample1)
+                else:
+                    dks, pval = multiKS2s(sample0, sample1)
                 dkss.append(dks)
                 pvals.append(pval)
             # get list of H0 acceptances and p-values
@@ -60,6 +62,16 @@ def run_mc(rvs, args):
                     args=args,
                     true_label=rv_true.label,
                     alter_label=rv_alter.label,
+                    dks=dkss,
+                    pval=pvals
+                )
+            )
+            # write results in oposite order for easier processing later
+            results.append(
+                data_row(
+                    args=args,
+                    true_label=rv_alter.label,
+                    alter_label=rv_true.label,
                     dks=dkss,
                     pval=pvals
                 )
@@ -81,9 +93,6 @@ def main():
     parser.add_argument("--M", type=int, required=True, help="number of MC repetitions")
     parser.add_argument("--output_dp", type=str, default="", help="where to dump output")
     args = parser.parse_args()
-
-    if args.dim > 2:
-        raise NotADirectoryError('2sample KS for dim>2 not yet implemented')
 
     rvs = get_random_variables(dim=args.dim)
 

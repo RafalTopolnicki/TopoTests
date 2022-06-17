@@ -10,7 +10,7 @@ outputdp="../results/"
 commandsfile="commands_ks_2sample.txt"
 
 # set parameters that are the same for all runs
-M=1000
+M=500
 
 # create file with commands that will be run
 
@@ -18,9 +18,9 @@ if [ -f ${commandsfile} ]; then
   rm "${commandsfile}"
 fi
 
-for n in 100 250 500 1000
+for dim in 1 2 3
 do
-  for dim in 1 2
+  for n in 100 250 500 1000 2500
   do
     echo "python ${scriptname} --n ${n} --dim ${dim} --M ${M} --output_dp ${outputdp}" >> ${commandsfile}
   done # end n-loop

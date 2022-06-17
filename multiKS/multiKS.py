@@ -81,7 +81,6 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
     d = np.max(np.abs(np.array(theoretical_values) - np.array(data_values)))
     return d
 
-
 def multiKS(arr_nd, cdf_nd):
     """
     Multidimension one-sample Kolmogorov-Smirnov test.
@@ -108,3 +107,58 @@ def multiKS(arr_nd, cdf_nd):
     for point in arr_nd:
         d_ks.append(orthant(arr_nd=arr_nd, func=cdf_nd, point=point, axis_low=numeric_low, axis_high=numeric_high))
     return np.max(d_ks)
+
+
+def orthant_data(arr_nd1, arr_nd2, point):
+    """
+
+    :param arr_nd:
+    :param func:
+    :param point:
+    :param axis_low:
+    :param axis_high:
+    :return:
+    """
+    # use binary representation to iterate over orthans
+    n_dim = len(point)
+    n_data = arr_nd1.shape[0]
+
+    data_values1 = []
+    data_values2 = []
+
+    for i in range(2**n_dim):
+        # iterate over all possible orthants
+        bin_mask = bin(i)[2:].zfill(n_dim)
+        p_low = [None] * n_dim
+        p_high = [None] * n_dim
+        # parse binary representation into orthants in R^n_dim
+        filtration_mask1 = [True] * n_data
+        filtration_mask2 = [True] * n_data
+
+        for id_b, b in enumerate(bin_mask):
+            if b == "1":
+                filtration_mask1 = np.logical_and(filtration_mask1, arr_nd1[:, id_b] > point[id_b])
+                filtration_mask2 = np.logical_and(filtration_mask2, arr_nd2[:, id_b] > point[id_b])
+            else:
+                filtration_mask1 = np.logical_and(filtration_mask1, arr_nd1[:, id_b] < point[id_b])
+                filtration_mask2 = np.logical_and(filtration_mask2, arr_nd2[:, id_b] < point[id_b])
+        data_values1.append(np.sum(filtration_mask1) / n_data)
+        data_values2.append(np.sum(filtration_mask2) / n_data)
+
+    d = np.max(np.abs(np.array(data_values1) - np.array(data_values2)))
+    return d
+
+
+def multiKS2s(arr_nd1, arr_nd2):
+    if arr_nd1.shape[0] != arr_nd2.shape[0]:
+        raise NotImplementedError('Samples must be of equal length!')
+    d_ks1 = []
+    d_ks2 = []
+    for point1 in arr_nd1:
+        d_ks1.append(orthant_data(arr_nd1=arr_nd1, arr_nd2=arr_nd2, point=point1))
+    for point2 in arr_nd2:
+        d_ks2.append(orthant_data(arr_nd1=arr_nd1, arr_nd2=arr_nd2, point=point2))
+    d_ks1 = np.max(d_ks1)
+    d_ks2 = np.max(d_ks2)
+    d = (d_ks1 + d_ks2)/2
+    return d, np.nan
