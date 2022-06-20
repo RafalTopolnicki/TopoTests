@@ -3,7 +3,6 @@ import sys
 import os
 import argparse
 from randomvariables import get_random_variables
-from scipy import stats
 
 # setting path
 sys.path.append("../multiKS/")
@@ -32,6 +31,12 @@ def data_row(args, true_label, alter_label, dks, pval):
 def run_mc(rvs, args):
     outputfilename = f"ks_2sample_dim={args.dim}_n={args.n}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
+    # check if outputfile exists
+    df = None
+    if os.path.exists(outputfilepath):
+        logging.info(f"OUTPUTFILE FOUND! Will continue from here.")
+        df = pd.read_csv(outputfilepath).iloc[:, 1:]
+        outputfilepath = os.path.join(args.output_dp, outputfilename+'.cont') #fixme: this works only for one restart
     results = []
     rvs_n = len(rvs)
     for rv_true_id in range(rvs_n-1):
@@ -40,6 +45,10 @@ def run_mc(rvs, args):
         # train TopoTest
         for rv_alter_id in range(rv_true_id, rvs_n):
             rv_alter = rvs[rv_alter_id]
+            if df is not None:
+                if np.any(np.logical_and(df.true_dist == rv_true.label, df.alter_dist == rv_alter.label)):
+                    logging.info(f"KS-2S: Skipping {rv_true.label} alter: {rv_alter.label}")
+                    continue
             logging.info(f"KS-2S: Start distribution true: {rv_true.label} alter: {rv_alter.label}")
             # generate samples from alternative distributions
             dkss = []

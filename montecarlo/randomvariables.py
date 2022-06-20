@@ -126,5 +126,5 @@ def get_random_variables(dim):
             ),
         ]
     if len(rvs) == 0:
-        raise NotImplemented(f"Random variables for dim={dim} not found")
+        raise NotImplementedError(f"Random variables for dim={dim} not found")
     return rvs

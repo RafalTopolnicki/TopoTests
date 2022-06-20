@@ -94,7 +94,7 @@ def multiKS(arr_nd, cdf_nd):
     """
     # for 1d data the Scipy implementation of KS test is 20-200x faster - use it
     if len(arr_nd.shape) == 1 or arr_nd.shape[1] == 1:
-        ks_out = stats.ks_1samp(arr_nd, cdf_nd)
+        ks_out = stats.ks_1samp(arr_nd[:, 0], cdf_nd)
         return ks_out[0]
     # for unknown reason Cumulative distribution functions implemented in Scipy
     # does not work properly with np.Inf and -np.Inf
@@ -162,3 +162,4 @@ def multiKS2s(arr_nd1, arr_nd2):
     d_ks2 = np.max(d_ks2)
     d = (d_ks1 + d_ks2)/2
     return d, np.nan
+

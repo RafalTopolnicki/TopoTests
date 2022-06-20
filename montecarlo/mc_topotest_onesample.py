@@ -38,6 +38,7 @@ def run_mc(rvs, args):
     outputfilename = f"dim={args.dim}_n={args.n}_norm={args.norm}_method={args.method}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
+
     for rv_true in rvs:
         logging.info(f"TT-1s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
         topo_test = TopoTest_onesample(
