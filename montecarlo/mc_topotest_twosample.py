@@ -35,16 +35,16 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 def run_mc(rvs, args):
     outputfilename = f"twosample_dim={args.dim}_n={args.n}_norm={args.norm}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
-    df = None
+    df_done = None
     if os.path.exists(outputfilepath):
         logging.info(f"OUTPUTFILE FOUND! Will continue from here.")
-        df = pd.read_csv(outputfilepath).iloc[:, 1:]
+        df_done = pd.read_csv(outputfilepath).iloc[:, 1:]
         outputfilepath = os.path.join(args.output_dp, outputfilename+'.cont') #fixme: this works only for one restart
     results = []
     for rv_true in rvs:
         logging.info(f"TT-2s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm}")
         for rv_alter in rvs:
-            if df is not None and np.any(np.logical_and(df.true_dist == rv_true.label, df.alter_dist == rv_alter.label)):
+            if df_done is not None and np.any(np.logical_and(df_done.true_dist == rv_true.label, df_done.alter_dist == rv_alter.label)):
                 logging.info(f"KS-1S: Skipping {rv_true.label} alter: {rv_alter.label}")
             else:
                 logging.info(f"TT-2s: Start distribution true: {rv_true.label} alter: {rv_alter.label}")
@@ -69,8 +69,8 @@ def run_mc(rvs, args):
                     )
                 )
                 # write results to file after each test
-                df = pd.DataFrame(results)
-                df.to_csv(outputfilepath)
+                df_done = pd.DataFrame(results)
+                df_done.to_csv(outputfilepath)
 
 
 def main():

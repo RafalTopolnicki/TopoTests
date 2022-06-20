@@ -62,8 +62,8 @@ def run_mc(rvs, args):
                     )
                 )
                 # write results to file after each test
-                df = pd.DataFrame(results)
-                df.to_csv(outputfilepath)
+                df_data = pd.DataFrame(results)
+                df_data.to_csv(outputfilepath)
 
 
 def main():
