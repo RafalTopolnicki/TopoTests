@@ -81,6 +81,7 @@ def orthant(arr_nd, func, point, axis_low=-np.Inf, axis_high=np.Inf):
     d = np.max(np.abs(np.array(theoretical_values) - np.array(data_values)))
     return d
 
+
 def multiKS(arr_nd, cdf_nd):
     """
     Multidimension one-sample Kolmogorov-Smirnov test.

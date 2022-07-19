@@ -81,6 +81,38 @@ class MultivariateDistribution:
             pdf *= univariate.pdf(pt)
         return pdf
 
+class MultivariateDistributionJitter:
+    def __init__(self, univariates, jitter=0.05, label=None):
+        self.univariates = univariates
+        self.label = label
+        self.dim = len(univariates)
+        self.noise = st.norm(loc=0, scale=jitter)
+
+    def rvs(self, size):
+        sample = []
+        for univariate in self.univariates:
+            sample.append(univariate.rvs(size) + self.noise.rvs(size))
+        return np.transpose(sample)
+
+    def cdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        # no correlations between axies are allowed
+        if self.dim == 1:
+            pts = [pts]
+        cdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            cdf *= univariate.cdf(pt)
+        return cdf
+
+    def pdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        if self.dim == 1:
+            pts = [pts]
+        pdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            pdf *= univariate.pdf(pt)
+        return pdf
+
 
 class MultivariateGaussian:
     def __init__(self, dim, a, label=None):
