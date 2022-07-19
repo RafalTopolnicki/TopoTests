@@ -8,7 +8,7 @@ class GaussianMixture:
         # scales - vector of scale parameters
         # probas - vector of mixture coefficients
         if not (len(locations) == len(scales) and len(scales) == len(probas)):
-            raise ValueError('Wrong number of components for Gaussian Mixture')
+            raise ValueError("Wrong number of components for Gaussian Mixture")
         self.locations = locations
         self.scales = scales
         self.n_gauss = len(locations)
@@ -24,15 +24,15 @@ class GaussianMixture:
         return X
 
     def cdf(self, x):
-        cdf=0
+        cdf = 0
         for p, rv in zip(self.probas, self.gauss_rv):
-            cdf += p*rv.cdf(x)
+            cdf += p * rv.cdf(x)
         return cdf
 
     def pdf(self, x):
-        pdf=0
+        pdf = 0
         for p, rv in zip(self.probas, self.gauss_rv):
-            pdf += p*rv.pdf(x)
+            pdf += p * rv.pdf(x)
         return pdf
 
 
@@ -44,11 +44,10 @@ class AbsoluteDistribution:
         return np.abs(self.rv.rvs(size))
 
     def cdf(self, x):
-        return 2*self.rv.cdf(x) - 1
+        return 2 * self.rv.cdf(x) - 1
 
     def pdf(self, x):
-        return 2*self.rv.pdf(x)
-
+        return 2 * self.rv.pdf(x)
 
 
 class MultivariateDistribution:
@@ -81,3 +80,53 @@ class MultivariateDistribution:
         for pt, univariate in zip(pts, self.univariates):
             pdf *= univariate.pdf(pt)
         return pdf
+
+class MultivariateDistributionJitter:
+    def __init__(self, univariates, jitter=0.05, label=None):
+        self.univariates = univariates
+        self.label = label
+        self.dim = len(univariates)
+        self.noise = st.norm(loc=0, scale=jitter)
+
+    def rvs(self, size):
+        sample = []
+        for univariate in self.univariates:
+            sample.append(univariate.rvs(size) + self.noise.rvs(size))
+        return np.transpose(sample)
+
+    def cdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        # no correlations between axies are allowed
+        if self.dim == 1:
+            pts = [pts]
+        cdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            cdf *= univariate.cdf(pt)
+        return cdf
+
+    def pdf(self, pts):
+        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+        if self.dim == 1:
+            pts = [pts]
+        pdf = 1
+        for pt, univariate in zip(pts, self.univariates):
+            pdf *= univariate.pdf(pt)
+        return pdf
+
+
+class MultivariateGaussian:
+    def __init__(self, dim, a, label=None):
+        self.dim = dim
+        self.label = label
+        self.cov = np.ones((dim, dim)) * a + np.identity(dim) * (1 - a)
+        self.mean = [0] * dim
+        self.rv = st.multivariate_normal(mean=self.mean, cov=self.cov)
+
+    def rvs(self, size):
+        return self.rv.rvs(size)
+
+    def cdf(self, pts):
+        return self.rv.cdf(pts)
+
+    def pdf(self, pts):
+        return self.rv.pdf(pts)

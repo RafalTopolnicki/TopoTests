@@ -1,100 +1,68 @@
 from collections import namedtuple
 from gudhi import representations
 
-from mergegram import mergegram
 from ecc import *
-import pickle
-
-distance_aggregators = namedtuple('distance_aggregators', 'min mean max quantile')
 
 
 def sample_standarize(sample):
-    return (sample - np.mean(sample, axis=0))/np.std(sample, axis=0)
+    return (sample - np.mean(sample, axis=0)) / np.std(sample, axis=0)
 
 
-class TopoTest:
-    def __init__(self, n: int, dim: int, significance_level: float = 0.05,
-                 method='mergegram', wasserstein_p=1, wasserstein_order=1,
-                 ecc_norm='sup', scaling=1,
-                 standarize=False):
+class TopoTest_onesample:
+    def __init__(
+        self,
+        n: int,
+        dim: int,
+        significance_level: float = 0.05,
+        norm="sup",
+        method="approximate",
+        scaling=1,
+        standarize=False,
+    ):
         """
-
-        :param n:
-        :param dim:
-        :param significance_level:
-        :param method:
-        :param wasserstein_p:
-        :param wasserstein_order:
+        TODO: add comment
         """
-
-        if method not in ['mergegram', 'persistence', 'ecc', 'ecc-exact']:
-            raise ValueError(f'Incorrect method. Found method={method}. Possible options are '
-                             f'"mergegram", "persistence", "ecc", "ecc-exact"')
         self.fitted = False
         self.sample_pts_n = n
         self.sample_pt_dim = dim
         self.significance_level = significance_level
         self.method = method
-        self.wasserstein_p = wasserstein_p
-        self.wasserstein_order = wasserstein_order
-        self.ecc_norm = ecc_norm
+        self.norm = norm
         self.standarize = standarize
         self.scaling = scaling
-        if method in ['mergegram', 'persistence']:
-            self.representation = representations.WassasersteinDistance(n_jobs=-1,
-                                                                      order=self.wasserstein_order,
-                                                                      internal_p=self.wasserstein_p)
-        if method == 'ecc':
-            self.representation = ecc_representation(self.ecc_norm)
-        if method == 'ecc-exact':
-            self.representation = ecc_representation(self.ecc_norm, mode='exact')
+        if method not in ["approximate", "exact"]:
+            raise ValueError(f"method must be approximate or exact, got {method} instead")
+        if method == "approximate":
+            self.representation = ecc_representation(self.norm, mode="approximate")
+        if method == "exact":
+            self.representation = ecc_representation(self.norm, mode="exact")
 
-        self.n_points_to_save = 1000
+        self.n_points_to_save = 5000
         self.representation_distance = None
         self.representation_threshold = None
         self.representation_distance_predict = None
         self.representation_signature = None
-        self.representation_predict = {}
 
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample
-        samples = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim)*self.scaling for i in range(n_signature)]
-        samples_test = [rv.rvs(self.sample_pts_n).reshape(-1, self.sample_pt_dim)*self.scaling for i in range(n_test)]
+        samples = [rv.rvs(self.sample_pts_n) * self.scaling for i in range(n_signature)]
+        samples_test = [rv.rvs(self.sample_pts_n) * self.scaling for i in range(n_test)]
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
             samples_test = [sample_standarize(sample) for sample in samples_test]
 
         # get signatures representations of both samples
-
-        signature_samples = [self.get_signature(sample) for sample in samples]
-        signature_samples_test = [self.get_signature(sample) for sample in samples_test]
-        self.representation.fit(signature_samples)
-        self.representation_distance, self.representation_signature = self.representation.transform(signature_samples_test)
-        representation_test_skip = int(len(self.representation_signature[0])/self.n_points_to_save)
-        self.representation_signature = self.representation_signature[::representation_test_skip]
-
-        if self.method not in ['ecc', 'ecc-exact']:
-            dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance)
-            self.representation_threshold = {'min': np.quantile(dmin, 1 - self.significance_level),
-                                             'mean': np.quantile(dmean, 1-self.significance_level),
-                                             'max': np.quantile(dmax, 1-self.significance_level),
-                                             'quantile': np.quantile(dq, 1-self.significance_level)
-                                             }
-        else:
-            self.representation_threshold \
-                = {'mean': np.quantile(self.representation_distance, 1 - self.significance_level)}
+        self.representation.fit(samples)
+        (
+            self.representation_distance,
+            self.representation_signature,
+        ) = self.representation.transform(samples_test)
+        self.representation_threshold = np.quantile(self.representation_distance, 1 - self.significance_level)
         self.fitted = True
 
-    def aggregate_distances(self, distance_matrix):
-        dmean = np.mean(distance_matrix, axis=1)
-        dmin = np.min(distance_matrix, axis=1)
-        dmax = np.max(distance_matrix, axis=1)
-        dq = np.quantile(distance_matrix, q=0.9, axis=1)
-        return dmin, dmean, dmax, dq
-
-    def predict(self, samples, label):
+    def predict(self, samples):
         if not self.fitted:
-            raise RuntimeError('Cannot run predict(). Run fit() first!')
+            raise RuntimeError("Cannot run predict(). Run fit() first!")
         if len(samples) == 1:
             samples = [samples]
 
@@ -103,33 +71,11 @@ class TopoTest:
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
 
-        signatures = [self.get_signature(sample) for sample in samples]
-        self.representation_distance_predict, representation_test = self.representation.transform(signatures)
-        representation_test_skip = int(len(representation_test[0])/self.n_points_to_save)
-        self.representation_predict[label] = [rep[::representation_test_skip] for rep in representation_test]
-
-        if self.method not in ['ecc', 'ecc-exact']:
-            dmin, dmean, dmax, dq = self.aggregate_distances(self.representation_distance_predict)
-            return {'min': dmin < self.representation_threshold['min'],
-                    'mean': dmean < self.representation_threshold['mean'],
-                    'max': dmax < self.representation_threshold['max'],
-                    'quantile': dq < self.representation_threshold['quantile']}
-        # method=ecc
-        res = {'mean': [dp < self.representation_threshold['mean'] for dp in self.representation_distance_predict]}
-        return res
-
-    def get_signature(self, sample):
-        if self.method == 'mergegram':
-            return mergegram(sample)
-
-        if self.method == 'persistence':
-            ac = gd.AlphaComplex(points=sample)
-            st = ac.create_simplex_tree()
-            st.compute_persistencerep()
-            return st.persistence_intervals_in_dimension(0)
-
-        # in all other cases, i.e. for ecc method simply return sample
-        return sample
+        self.representation_distance_predict, _ = self.representation.transform(samples)
+        accpect_h0 = [dp < self.representation_threshold for dp in self.representation_distance_predict]
+        # calculate pvalues
+        pvals = [np.mean(self.representation_distance > dp) for dp in self.representation_distance_predict]
+        return accpect_h0, pvals
 
     def save_distance_matrix(self, filename):
         np.save(filename, self.representation_distance)
@@ -137,21 +83,49 @@ class TopoTest:
     def save_predict_distance_matrix(self, filename):
         np.save(filename, self.representation_distance_predict)
 
-    def save_representation(self, filename):
-        representation_test_skip = int(len(self.representation.xs)/self.n_points_to_save)
-        with open(filename, 'wb') as fp:
-            pickle.dump([self.representation.xs,
-                         self.representation.representation,
-                         self.representation.representation2,
-                         self.representation.std,
-                         self.representation_distance_predict, # sup values
-                         self.representation_signature, # what is that?
-                         self.representation.xs[::representation_test_skip],
-                         self.representation_predict],
-                        fp)
 
-    def save_model(self):
-        pass
+def TopoTest_twosample(X1, X2, norm="sup", loops=100):
+    n_grids = 2000
+    n1 = X1.shape[0]
+    n2 = X2.shape[0]
 
-    def load_model(self):
-        pass
+    def _get_ecc(X, epsmax=None):
+        ecc = np.array(compute_ECC_contributions_alpha(X))
+        ecc[:, 1] = np.cumsum(ecc[:, 1])
+        if epsmax is not None:
+            ecc = np.vstack([ecc, [epsmax, 1]])
+        return ecc
+
+    def _dist_ecc(ecc1, ecc2):
+        # ecc1 and ecc2 are of equal length and have jumps in the same location
+        if norm == "sup":
+            return np.max(np.abs(ecc1[:, 1] - ecc2[:, 1]))
+        if norm == "l1":
+            return np.trapz(np.abs(ecc1[:, 1] - ecc2[:, 1]), x=ecc1[:, 0])
+        if norm == "l2":
+            return np.trapz((ecc1[:, 1] - ecc2[:, 1]) ** 2, x=ecc1[:, 0])
+
+    def _interpolate(ecc, epsgrid):
+        interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind="previous")
+        y = interpolator(epsgrid)
+        return np.column_stack([epsgrid, y])
+
+    ecc1 = _get_ecc(X1)
+    ecc2 = _get_ecc(X2)
+    epsmax = max(np.max(ecc1[:, 0]), np.max(ecc2[:, 0]))
+    epsgrid = np.linspace(0, epsmax, n_grids)
+    ecc1 = _interpolate(_get_ecc(X1, epsmax), epsgrid)
+    ecc2 = _interpolate(_get_ecc(X2, epsmax), epsgrid)
+    D = _dist_ecc(ecc1, ecc2)
+
+    X12 = np.vstack([X1, X2])
+    distances = []
+    for _ in range(loops):
+        inds = np.random.permutation(n1 + n2)
+        x1 = X12[inds[:n1]]
+        x2 = X12[inds[n1:]]
+        y1 = _interpolate(_get_ecc(x1, epsmax), epsgrid=epsgrid)
+        y2 = _interpolate(_get_ecc(x2, epsmax), epsgrid=epsgrid)
+        distances.append(_dist_ecc(y1, y2))
+    pval = np.mean(distances > D)
+    return D, pval, distances
