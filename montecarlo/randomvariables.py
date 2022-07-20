@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("../topotests/")
 import scipy.stats as st
+import numpy as np
 from distributions import *
 
 
@@ -9,21 +10,45 @@ def get_random_variables(dim):
     rvs = []
     if dim == 1:
         rvs = [
+            # distributions used before
+            # MultivariateDistribution([st.norm()], label="N_0_1"),
+            # MultivariateDistribution([st.norm(0, 1.5)], label="N_0_2"),
+            # MultivariateDistribution([st.beta(2, 2)], label="beta_2_2"),
+            # MultivariateDistribution([st.beta(5, 5)], label="beta_5_5"),
+            # MultivariateDistribution([st.laplace()], label="laplace"),
+            # MultivariateDistribution([st.uniform()], label="U_0_1"),
+            # MultivariateDistribution([st.t(df=3)], label="T_3"),
+            # MultivariateDistribution([st.t(df=5)], label="T_5"),
+            # MultivariateDistribution([st.t(df=10)], label="T_10"),
+            # MultivariateDistribution([st.cauchy()], label="Cauchy"),
+            # MultivariateDistribution([st.logistic()], label="Logistic"),
+            # MultivariateDistribution([AbsoluteDistribution(rv=st.norm())], label="HalfNormal"),
+            # MultivariateDistribution([GaussianMixture([-1, 1], [1, 1], [0.5, 0.5])], label="GM_1"),
+            # MultivariateDistribution([GaussianMixture([-0.5, -0.5], [1, 1], [0.5, 0.5])], label="GM_2"),
+            # MultivariateDistribution([GaussianMixture([0, 1], [1, 2], [0.9, 0.1])], label="GM_3"),
+            #############################
             MultivariateDistribution([st.norm()], label="N_0_1"),
-            MultivariateDistribution([st.norm(0, 1.5)], label="N_0_2"),
+            MultivariateDistribution([st.norm(0, 0.5)], label="N_0_0.5"),
+            MultivariateDistribution([st.norm(0, 1.5)], label="N_0_1.5"),
+            MultivariateDistribution([st.norm(0, 2)], label="N_0_2"),
             MultivariateDistribution([st.beta(2, 2)], label="beta_2_2"),
             MultivariateDistribution([st.beta(5, 5)], label="beta_5_5"),
+            MultivariateDistribution([st.beta(2, 1)], label="beta_2_1"),
+            MultivariateDistribution([st.beta(3, 2)], label="beta_3_2"),
             MultivariateDistribution([st.laplace()], label="laplace"),
+            MultivariateDistribution([st.uniform(loc=-np.sqrt(3), scale=2*np.sqrt(3))], label="Unif"),
             MultivariateDistribution([st.uniform()], label="U_0_1"),
             MultivariateDistribution([st.t(df=3)], label="T_3"),
             MultivariateDistribution([st.t(df=5)], label="T_5"),
             MultivariateDistribution([st.t(df=10)], label="T_10"),
+            MultivariateDistribution([st.t(df=25)], label="T_25"),
             MultivariateDistribution([st.cauchy()], label="Cauchy"),
             MultivariateDistribution([st.logistic()], label="Logistic"),
-            MultivariateDistribution([AbsoluteDistribution(rv=st.norm())], label="HalfNormal"),
-            MultivariateDistribution([GaussianMixture([-1, 1], [1, 1], [0.5, 0.5])], label="GM_1"),
-            MultivariateDistribution([GaussianMixture([-0.5, -0.5], [1, 1], [0.5, 0.5])], label="GM_2"),
-            MultivariateDistribution([GaussianMixture([0, 1], [1, 2], [0.9, 0.1])], label="GM_3"),
+            MultivariateDistribution([GaussianMixture([0, 1], [1, 1], [0.9, 0.1])], label="GM_2"),
+            MultivariateDistribution([GaussianMixture([0, 1], [1, 1], [0.7, 0.3])], label="GM_3"),
+            MultivariateDistribution([GaussianMixture([0, 1], [1, 1], [0.5, 0.5])], label="GM_4"),
+            MultivariateDistribution([GaussianMixture([0, 1], [1, 1], [0.3, 0.7])], label="GM_4"),
+            MultivariateDistribution([GaussianMixture([0, 1], [1, 1], [0.1, 0.9])], label="GM_5"),
         ]
     if dim == 2:
         rvs = [
