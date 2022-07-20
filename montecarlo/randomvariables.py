@@ -35,6 +35,8 @@ def get_random_variables(dim):
             MultivariateDistribution([st.beta(5, 5)], label="beta_5_5"),
             MultivariateDistribution([st.beta(2, 1)], label="beta_2_1"),
             MultivariateDistribution([st.beta(3, 2)], label="beta_3_2"),
+            MultivariateDistribution([st.beta(6, 2)], label="beta_6_2"),
+            MultivariateDistribution([st.gamma(4, 5)], label="gamma_4_5"),
             MultivariateDistribution([st.laplace()], label="laplace"),
             MultivariateDistribution([st.uniform(loc=-np.sqrt(3), scale=2*np.sqrt(3))], label="Unif"),
             MultivariateDistribution([st.uniform()], label="U_0_1"),
