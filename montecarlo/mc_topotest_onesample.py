@@ -52,7 +52,7 @@ def run_mc(rvs, args):
                 #at least one alternative distribution is missing - need to repeat whole simulation
                 #for that true distribution
                 rv_true_done = False
-        if rv_true_done:
+        if df_done is not None and rv_true_done:
             logging.info(f"TT-1s: All with true distribution: {rv_true.label} n={args.n} dim={args.dim} norm={args.norm} done!")
             continue
 
