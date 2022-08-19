@@ -110,7 +110,7 @@ class MultivariateDistribution:
     def cdf(self, pts):
         # FIXME: this work only for multivariate distributions with diagonal covariance matrix
         # no correlations between axies are allowed
-        pts = pts - self.shift_vec
+        pts = pts + self.shift_vec
         if self.dim == 1:
             pts = [pts]
         cdf = 1
