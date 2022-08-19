@@ -65,8 +65,12 @@ class MultivariateDistribution:
 
     def rvs(self, size):
         sample = []
-        for univariate, shift_val in zip(self.univariates, self.shift_vec):
-            sample.append(univariate.rvs(size)-shift_val)
+        if self.shift:
+            for univariate, shift_val in zip(self.univariates, self.shift_vec):
+                sample.append(univariate.rvs(size)-shift_val)
+        else:
+            for univariate in self.univariates:
+                sample.append(univariate.rvs(size))
         return np.transpose(sample)
 
     def cdf(self, pts):
