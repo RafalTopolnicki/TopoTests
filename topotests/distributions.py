@@ -120,7 +120,7 @@ class MultivariateDistribution:
             pts = [pts]
         else:
             for i in range(self.dim):
-                pts[:, i] = pts[:, i] * self.scale_vec[i]
+                pts[i] = pts[i] * self.scale_vec[i]
             pts = pts + self.shift_vec
         cdf = 1
         for pt, univariate in zip(pts, self.univariates):
