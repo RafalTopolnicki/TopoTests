@@ -62,6 +62,7 @@ class MultivariateDistribution:
                 self.shift_vec.append(uni.stats(moments='m'))
             else:
                 self.shift_vec.append(0)
+        self.shift_vec = np.array(self.shift_vec)
 
     def rvs(self, size):
         sample = []
@@ -76,6 +77,7 @@ class MultivariateDistribution:
     def cdf(self, pts):
         # FIXME: this work only for multivariate distributions with diagonal covariance matrix
         # no correlations between axies are allowed
+        pts = pts - self.shift_vec
         if self.dim == 1:
             pts = [pts]
         cdf = 1
