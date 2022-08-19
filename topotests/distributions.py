@@ -51,15 +51,22 @@ class AbsoluteDistribution:
 
 
 class MultivariateDistribution:
-    def __init__(self, univariates, label=None):
+    def __init__(self, univariates, label=None, shift=False):
         self.univariates = univariates
         self.label = label
         self.dim = len(univariates)
+        self.shift = shift
+        self.shift_vec = []
+        for uni in self.univariates:
+            if self.shift:
+                self.shift_vec.append(uni.stats(moments='m'))
+            else:
+                self.shift_vec.append(0)
 
     def rvs(self, size):
         sample = []
-        for univariate in self.univariates:
-            sample.append(univariate.rvs(size))
+        for univariate, shift_val in zip(self.univariates, self.shift_vec):
+            sample.append(univariate.rvs(size)-shift_val)
         return np.transpose(sample)
 
     def cdf(self, pts):
