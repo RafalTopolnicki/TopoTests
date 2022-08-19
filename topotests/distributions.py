@@ -35,6 +35,39 @@ class GaussianMixture:
             pdf += p * rv.pdf(x)
         return pdf
 
+class GaussianMixture_nd:
+    def __init__(self, locations, covs, probas, label=None):
+        # locations - vector of location parameters
+        # covs - vector of covarance matrices
+        # probas - vector of mixture coefficients
+        if not (len(locations) == len(covs) and len(covs) == len(probas)):
+            raise ValueError("Wrong number of components for Gaussian Mixture")
+        self.locations = locations
+        self.covs = covs
+        self.n_gauss = len(locations)
+        self.gauss_rv = [st.multivariate_normal(mean=loc, cov=cov) for loc, cov in zip(locations, covs)]
+        probas_sum = np.sum(probas)
+        probas = [proba / probas_sum for proba in probas]
+        self.probas = probas
+        self.label = label
+
+    # draw sample from GaussianMixture model
+    def rvs(self, N):
+        inds = st.rv_discrete(values=(range(self.n_gauss), self.probas)).rvs(size=N)
+        X = [self.gauss_rv[ind].rvs(size=1) for ind in inds] # this is slow but good enough for now
+        return np.array(X)
+
+    def cdf(self, x):
+        cdf = 0
+        for p, rv in zip(self.probas, self.gauss_rv):
+            cdf += p * rv.cdf(x)
+        return cdf
+
+    def pdf(self, x):
+        pdf = 0
+        for p, rv in zip(self.probas, self.gauss_rv):
+            pdf += p * rv.pdf(x)
+        return pdf
 
 class AbsoluteDistribution:
     def __init__(self, rv):

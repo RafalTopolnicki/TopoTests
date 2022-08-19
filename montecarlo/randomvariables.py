@@ -123,35 +123,66 @@ def get_random_variables(dim):
     if dim == -2:
         rvs = [
             MultivariateDistribution([st.norm(), st.norm()], label="N01xN01"),
-            MultivariateGaussian(dim=2, a=0.05, label="MultiGauss0.05"),
-            MultivariateGaussian(dim=2, a=0.1, label="MultiGauss0.1"),
-            MultivariateGaussian(dim=2, a=0.2, label="MultiGauss0.2"),
-            MultivariateGaussian(dim=2, a=0.3, label="MultiGauss0.3"),
-            MultivariateGaussian(dim=2, a=0.5, label="MultiGauss0.5"),
-            MultivariateDistribution([st.t(df=3), st.t(df=3)], label="T3xT3"),
-            MultivariateDistribution([st.t(df=5), st.t(df=5)], label="T5xT5"),
-            MultivariateDistribution([st.t(df=10), st.t(df=10)], label="T10xT10"),
-            MultivariateDistribution([st.t(df=25), st.t(df=25)], label="T25x25"),
-            MultivariateDistribution([st.logistic(), st.logistic()], label="LogisticxLogistic"),
-            MultivariateDistribution([st.laplace(), st.laplace()], label="LaplacexLaplace"),
-            MultivariateDistribution([st.norm(), st.t(df=3)], label="N01xT3"),
-            MultivariateDistribution([st.norm(), st.t(df=5)], label="N01xT5"),
-            MultivariateDistribution([st.norm(), st.t(df=10)], label="N01xT10"),
-            MultivariateDistribution(
-                [GaussianMixture([0, 1], [1, 0.5], [0.9, 0.1]),
-                 GaussianMixture([0, 1], [1, 0.5], [0.9, 0.1])],
-                label="GM_1xGM_1"
-            ),
-            MultivariateDistribution(
-                [GaussianMixture([0, 1], [1, 0.5], [0.7, 0.3]),
-                 GaussianMixture([0, 1], [1, 0.5], [0.7, 0.3])],
-                label="GM_2xGM_2"
-            ),
-            MultivariateDistribution(
-                [GaussianMixture([0, 1], [1, 0.5], [0.5, 0.5]),
-                 GaussianMixture([0, 1], [1, 0.5], [0.5, 0.5])],
-                label="GM_3xGM_3"
-            )
+            GaussianMixture_nd(locations=[[0, 0], [1, 1]], covs=[ [[1, 0], [0, 1]], [[3, 0],[0, 3]]], probas=[0.9, 0.1],
+                               label='2dGM1'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.7, 0.3],
+                               label='2dGM2'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.5, 0.5],
+                               label='2dGM3'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.3, 0.7],
+                               label='2dGM4'),
+            GaussianMixture_nd(locations=[[0, 0], [0, 0]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.9, 0.1],
+                               label='2dGM5'),
+            GaussianMixture_nd(locations=[[0, 0], [0, 0]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.7, 0.3],
+                               label='2dGM6'),
+            GaussianMixture_nd(locations=[[0, 0], [0, 0]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.5, 0.5],
+                               label='2dGM7'),
+            GaussianMixture_nd(locations=[[0, 0], [0, 0]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]]], probas=[0.3, 0.7],
+                               label='2dGM8'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1], [-1, -1]], covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]], [[3, 0], [0, 3]]],
+                               probas=[0.9, 0.05, 0.05],
+                               label='2dGM9'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1], [-1, -1]],
+                               covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]], [[3, 0], [0, 3]]],
+                               probas=[0.7, 0.15, 0.15],
+                               label='2dGM10'),
+            GaussianMixture_nd(locations=[[0, 0], [1, 1], [-1, -1]],
+                               covs=[[[1, 0], [0, 1]], [[3, 0], [0, 3]], [[3, 0], [0, 3]]],
+                               probas=[0.5, 0.25, 0.25],
+                               label='2dGM11'),
+            GaussianMixture_nd(locations=[[0, 0], [0, 0]],
+                               covs=[[[1, 0.5], [0.5, 1]], [[1, -0.5], [-0.5, 1.0]]],
+                               probas=[0.5, 0.5],
+                               label='2dGM12'),
+            # MultivariateGaussian(dim=2, a=0.05, label="MultiGauss0.05"),
+            # MultivariateGaussian(dim=2, a=0.1, label="MultiGauss0.1"),
+            # MultivariateGaussian(dim=2, a=0.2, label="MultiGauss0.2"),
+            # MultivariateGaussian(dim=2, a=0.3, label="MultiGauss0.3"),
+            # MultivariateGaussian(dim=2, a=0.5, label="MultiGauss0.5"),
+            # MultivariateDistribution([st.t(df=3), st.t(df=3)], label="T3xT3"),
+            # MultivariateDistribution([st.t(df=5), st.t(df=5)], label="T5xT5"),
+            # MultivariateDistribution([st.t(df=10), st.t(df=10)], label="T10xT10"),
+            # MultivariateDistribution([st.t(df=25), st.t(df=25)], label="T25x25"),
+            # MultivariateDistribution([st.logistic(), st.logistic()], label="LogisticxLogistic"),
+            # MultivariateDistribution([st.laplace(), st.laplace()], label="LaplacexLaplace"),
+            # MultivariateDistribution([st.norm(), st.t(df=3)], label="N01xT3"),
+            # MultivariateDistribution([st.norm(), st.t(df=5)], label="N01xT5"),
+            # MultivariateDistribution([st.norm(), st.t(df=10)], label="N01xT10"),
+            # MultivariateDistribution(
+            #     [GaussianMixture([0, 1], [1, 0.5], [0.9, 0.1]),
+            #      GaussianMixture([0, 1], [1, 0.5], [0.9, 0.1])],
+            #     label="GM_1xGM_1"
+            # ),
+            # MultivariateDistribution(
+            #     [GaussianMixture([0, 1], [1, 0.5], [0.7, 0.3]),
+            #      GaussianMixture([0, 1], [1, 0.5], [0.7, 0.3])],
+            #     label="GM_2xGM_2"
+            # ),
+            # MultivariateDistribution(
+            #     [GaussianMixture([0, 1], [1, 0.5], [0.5, 0.5]),
+            #      GaussianMixture([0, 1], [1, 0.5], [0.5, 0.5])],
+            #     label="GM_3xGM_3"
+            # )
         ]
 
     if dim == 3:
