@@ -12,12 +12,12 @@ def get_random_variables(dim):
     if dim == -1:
         rvs = [
             MultivariateDistribution([st.norm()], label="N_0_1"),
-            MultivariateDistribution([st.beta(2, 2)], label="beta_2_2", shift=True),
-            MultivariateDistribution([st.beta(5, 5)], label="beta_5_5", shift=True),
-            MultivariateDistribution([st.beta(2, 1)], label="beta_2_1", shift=True),
-            MultivariateDistribution([st.beta(3, 2)], label="beta_3_2", shift=True),
-            MultivariateDistribution([st.beta(6, 2)], label="beta_6_2", shift=True),
-            MultivariateDistribution([st.gamma(4, 5)], label="gamma_4_5", shift=True),
+            MultivariateDistribution([st.beta(2, 2)], label="beta_2_2", shift_and_scale=True),
+            MultivariateDistribution([st.beta(5, 5)], label="beta_5_5", shift_and_scale=True),
+            MultivariateDistribution([st.beta(2, 1)], label="beta_2_1", shift_and_scale=True),
+            MultivariateDistribution([st.beta(3, 2)], label="beta_3_2", shift_and_scale=True),
+            MultivariateDistribution([st.beta(6, 2)], label="beta_6_2", shift_and_scale=True),
+            MultivariateDistribution([st.gamma(4, 5)], label="gamma_4_5", shift_and_scale=True),
             MultivariateDistribution([GaussianMixture([0, 0], [1, 0.5], [0.9, 0.1])], label="0GM_1"),
             MultivariateDistribution([GaussianMixture([0, 0], [1, 0.5], [0.7, 0.3])], label="0GM_2"),
             MultivariateDistribution([GaussianMixture([0, 0], [1, 0.5], [0.5, 0.5])], label="0GM_3"),
