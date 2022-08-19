@@ -84,24 +84,28 @@ class AbsoluteDistribution:
 
 
 class MultivariateDistribution:
-    def __init__(self, univariates, label=None, shift=False):
+    def __init__(self, univariates, label=None, shift_and_scale=False):
         self.univariates = univariates
         self.label = label
         self.dim = len(univariates)
-        self.shift = shift
+        self.shift = shift_and_scale
         self.shift_vec = []
+        self.scale_vec = []
         for uni in self.univariates:
             if self.shift:
                 self.shift_vec.append(uni.stats(moments='m'))
+                self.scale_vec.append(np.sqrt(uni.stats(moments='v')))
             else:
                 self.shift_vec.append(0)
+                self.scale_vec.append(1)
         self.shift_vec = np.array(self.shift_vec)
+        self.scale_vec = np.array(self.scale_vec)
 
     def rvs(self, size):
         sample = []
         if self.shift:
-            for univariate, shift_val in zip(self.univariates, self.shift_vec):
-                sample.append(univariate.rvs(size)-shift_val)
+            for univariate, shift_val, scale_val in zip(self.univariates, self.shift_vec, self.scale_vec):
+                sample.append((univariate.rvs(size)-shift_val)/scale_val)
         else:
             for univariate in self.univariates:
                 sample.append(univariate.rvs(size))
@@ -110,22 +114,27 @@ class MultivariateDistribution:
     def cdf(self, pts):
         # FIXME: this work only for multivariate distributions with diagonal covariance matrix
         # no correlations between axies are allowed
-        pts = pts + self.shift_vec
         if self.dim == 1:
+            pts = pts * self.scale_vec[0]
+            pts = pts + self.shift_vec
             pts = [pts]
+        else:
+            for i in range(self.dim):
+                pts[:, i] = pts[:, i] * self.scale_vec[i]
+            pts = pts + self.shift_vec
         cdf = 1
         for pt, univariate in zip(pts, self.univariates):
             cdf *= univariate.cdf(pt)
         return cdf
 
-    def pdf(self, pts):
-        # FIXME: this work only for multivariate distributions with diagonal covariance matrix
-        if self.dim == 1:
-            pts = [pts]
-        pdf = 1
-        for pt, univariate in zip(pts, self.univariates):
-            pdf *= univariate.pdf(pt)
-        return pdf
+    # def pdf(self, pts):
+    #     # FIXME: this work only for multivariate distributions with diagonal covariance matrix
+    #     if self.dim == 1:
+    #         pts = [pts]
+    #     pdf = 1
+    #     for pt, univariate in zip(pts, self.univariates):
+    #         pdf *= univariate.pdf(pt)
+    #     return pdf
 
 class MultivariateDistributionJitter:
     def __init__(self, univariates, jitter=0.05, label=None):
