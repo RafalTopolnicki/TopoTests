@@ -11,6 +11,7 @@ import pandas as pd
 import logging
 from multiKS import multiKS2s
 from KS2Dfast import ks2d2s
+import scipy.stats as stats
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 
