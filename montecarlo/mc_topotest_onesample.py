@@ -98,7 +98,7 @@ def main():
         required=True,
         help="data size i.e. number of data points in each sample",
     )
-    parser.add_argument("--dim", type=int, required=True, help="dimension of the data points")
+    parser.add_argument("--dim", type=str, required=True, help="dimension of the data points")
     parser.add_argument(
         "--n_signature",
         type=int,

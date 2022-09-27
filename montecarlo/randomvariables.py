@@ -39,6 +39,24 @@ def get_random_variables(dim):
     #         MultivariateDistribution([GaussianMixture([0, 1], [1, 3], [0.3, 0.7])], label="3GM_4"),
     #         MultivariateDistribution([GaussianMixture([0, 1], [1, 3], [0.1, 0.9])], label="3GM_5"),
     #     ]
+    if dim == '1compact':
+        rvs = [
+            MultivariateDistribution([st.beta(3, 3)], label="beta_3_3"),
+            MultivariateDistribution([st.beta(2, 2)], label="beta_2_2"),
+            MultivariateDistribution([st.beta(4, 4)], label="beta_4_4"),
+            MultivariateDistribution([st.beta(5, 5)], label="beta_5_5"),
+            MultivariateDistribution([st.beta(3, 2)], label="beta_3_2"),
+            MultivariateDistribution([st.beta(4, 3)], label="beta_4_3"),
+            MultivariateDistribution([st.uniform(0, 1)], label="U_0_1"),
+            MultivariateDistribution([st.beta(0.8, 0.8)], label="beta_0.8_0.8"),
+            MultivariateDistribution([st.beta(0.5, 0.5)], label="beta_0.5_0.5"),
+            MultivariateDistribution([st.beta(1.5, 1.5)], label="beta_1.5_1.5"),
+            MultivariateDistribution([st.uniform(0.1, 0.8)], label="U_0.1_0.8"),
+            MultivariateDistribution([st.argus(chi=0.1)], label="argus_0.1"),
+            MultivariateDistribution([st.argus(chi=1)], label="argus_1"),
+            MultivariateDistribution([st.argus(chi=2)], label="argus_2"),
+            MultivariateDistribution([st.cosine(loc=0.5, scale=0.5/np.pi)], label="cosine"),
+        ]
     if dim == 1:
         rvs = [
             MultivariateDistribution([st.norm()], label="N_0_1"),
