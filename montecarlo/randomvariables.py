@@ -57,6 +57,19 @@ def get_random_variables(dim):
             MultivariateDistribution([st.argus(chi=2)], label="argus_2"),
             MultivariateDistribution([st.cosine(loc=0.5, scale=0.5/np.pi)], label="cosine"),
         ]
+    if dim == '3compact':
+        rvs = [
+            MultivariateDistribution([st.beta(3, 3), st.beta(3, 3), st.beta(3, 3)], label="beta_3_3^3"),
+            MultivariateDistribution([st.beta(2, 2), st.beta(2, 2), st.beta(2, 2)], label="beta_2_2^3"),
+            MultivariateDistribution([st.beta(4, 4), st.beta(4, 4), st.beta(4, 4)], label="beta_4_4^3"),
+            MultivariateDistribution([st.beta(5, 5), st.beta(5, 5), st.beta(5, 5)], label="beta_5_5^3"),
+            MultivariateDistribution([st.beta(6, 6), st.beta(6, 6), st.beta(6, 6)], label="beta_6_6^3"),
+            MultivariateDistribution([st.beta(7, 7), st.beta(7, 7), st.beta(7, 7)], label="beta_7_7^3"),
+            MultivariateDistribution([st.beta(3, 3), st.beta(2, 2), st.beta(4, 4)], label="beta_3_3xbeta_2_2xbeta_4_4"),
+            MultivariateDistribution([st.cosine(loc=0.5, scale=0.5 / np.pi), st.cosine(loc=0.5, scale=0.5 / np.pi),
+                                      st.cosine(loc=0.5, scale=0.5 / np.pi)], label="cosine^3"),
+            MultivariateDistribution([st.uniform(0, 1), st.uniform(0, 1), st.uniform(0, 1)], label="U_0_1^3"),
+        ]
     if dim == 1:
         rvs = [
             MultivariateDistribution([st.norm()], label="N_0_1"),
