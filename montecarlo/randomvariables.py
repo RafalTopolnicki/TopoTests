@@ -70,7 +70,7 @@ def get_random_variables(dim):
                                       st.cosine(loc=0.5, scale=0.5 / np.pi)], label="cosine^3"),
             MultivariateDistribution([st.uniform(0, 1), st.uniform(0, 1), st.uniform(0, 1)], label="U_0_1^3"),
         ]
-    if dim == 1:
+    if dim == '1':
         rvs = [
             MultivariateDistribution([st.norm()], label="N_0_1"),
             MultivariateDistribution([st.norm(0, 0.5)], label="N_0_0.5"),
@@ -152,7 +152,7 @@ def get_random_variables(dim):
     #         )
     #     ]
     # new 2d distributions for tests
-    if dim == 2:
+    if dim == '2':
         rvs = [
             MultivariateDistribution([st.norm(), st.norm()], label="N01xN01"),
             MultivariateGaussian(dim=2, a=0.05, label="MultiGauss0.05"),
@@ -205,7 +205,7 @@ def get_random_variables(dim):
                                label='2dGM13'),
         ]
 
-    if dim == 3:
+    if dim == '3':
         rvs = [
             MultivariateDistribution([st.norm(), st.norm(), st.norm()], label="N01xN01xN01"),
             MultivariateGaussian(dim=3, a=0.05, label="MultiGauss0.05"),
@@ -237,7 +237,7 @@ def get_random_variables(dim):
                                probas=[0.1, 0.9],
                                label='3dGM3'),
         ]
-    if dim == 5:
+    if dim == '5':
         rvs = [
             MultivariateDistribution(
                 [st.norm(), st.norm(), st.norm(), st.norm(), st.norm()], label="N01xN01xN01xN01xN01"
@@ -270,7 +270,7 @@ def get_random_variables(dim):
                 [st.norm(), st.norm(), st.laplace(), st.laplace(), st.laplace()], label="N01xN01xLapxLapxLap"
             ),
         ]
-    if dim == 7:
+    if dim == '7':
         rvs = [
             MultivariateDistribution(
                 [st.norm(), st.norm(), st.norm(), st.norm(), st.norm(), st.norm(), st.norm()],
