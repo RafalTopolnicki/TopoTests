@@ -1,9 +1,5 @@
 import numpy as np
-import scipy.interpolate as spi
-from scipy.spatial import distance_matrix
 import gudhi as gd
-import random
-from statsmodels.distributions.empirical_distribution import ECDF
 
 def normal_density(x, loc, sigma):
     return np.exp(-(x-loc)**2/(2*sigma))
