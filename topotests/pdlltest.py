@@ -22,7 +22,7 @@ class PDLLTest_onesample:
         """
         self.fitted = False
         self.sample_pts_n = n
-        self.data_dim = dim
+        self.data_dim = int(dim)
         self.persistence_dim = persistence_dim
         self.sigma = sigma,
         self.significance_level = significance_level
@@ -30,7 +30,9 @@ class PDLLTest_onesample:
         self.scaling = scaling
         self.representation = pdll_representation(persistence_dim=self.persistence_dim, sigma=self.sigma)
         self.loglikelihoods = None
-        self.representation_threshold = None,
+        self.representation_threshold = None
+        if self.persistence_dim >= self.data_dim:
+            raise ValueError(f'persistence_dim must be smaller than data_dim')
 
     def fit(self, rv, n_signature, n_test):
         # generate signature samples and test sample

@@ -19,9 +19,13 @@ class pdll_representation:
     def _compute_persistance_points(self, samples):
         all_pers_points = None
         for sample_id, sample in enumerate(samples):
+            if len(sample.shape) == 1:
+                sample = sample.reshape(-1, 1)
             ac = gd.AlphaComplex(points=sample).create_simplex_tree()
             ac.compute_persistence()
             pers_points = ac.persistence_intervals_in_dimension(self.persistence_dim)
+            # remove infs
+            pers_points = [pp for pp in pers_points if np.isfinite(pp[1])]
             if sample_id == 0:
                 all_pers_points = pers_points
             else:
@@ -41,6 +45,6 @@ class pdll_representation:
         for pdpoint in pdpoints:
             pdpoints_density = normal_density(x=pdpoint, loc=self.pdpoints, sigma=self.sigma)
             # since MVN has diagonal covarinace matrix we can total density is just a product of densities in each axis
-            loglikelihood += np.log(np.sum(np.prod(pdpoints_density, axis=1)))
+            loglikelihood += -np.log(np.sum(np.prod(pdpoints_density, axis=1)))
         return loglikelihood
 
