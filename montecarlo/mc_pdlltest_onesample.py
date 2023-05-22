@@ -32,7 +32,7 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 
 
 def run_mc(rvs, args):
-    outputfilename = f"dplltest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}_sigma={args.sigma}.csv"
+    outputfilename = f"dplltest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     df_done = None
@@ -42,7 +42,7 @@ def run_mc(rvs, args):
         outputfilepath = os.path.join(args.output_dp, outputfilename+'.cont') #fixme: this works only for one restart
 
     for rv_true in rvs:
-        logging.info(f"LL-1s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} persistence_dim={args.persistence_dim} sigma={args.sigma}")
+        logging.info(f"LL-1s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim} persistence_dim={args.persistence_dim}")
         rv_true_done = True
         for rv_alter in rvs:
             if df_done is not None and not np.any(np.logical_and(df_done.true_dist == rv_true.label, df_done.alter_dist == rv_alter.label)):
@@ -50,14 +50,13 @@ def run_mc(rvs, args):
                 #for that true distribution
                 rv_true_done = False
         if df_done is not None and rv_true_done:
-            logging.info(f"LL-1s: All with true distribution: {rv_true.label} n={args.n} dim={args.dim} persistence_dim={args.persistence_dim}_sigma={args.sigma} done!")
+            logging.info(f"LL-1s: All with true distribution: {rv_true.label} n={args.n} dim={args.dim} persistence_dim={args.persistence_dim} done!")
             continue
 
         pdlll_test = PDLLTest_onesample(
             n=args.n,
             dim=args.dim,
             significance_level=args.alpha,
-            sigma=args.sigma,
             persistence_dim=args.persistence_dim
         )
         # train TopoTest
@@ -111,7 +110,6 @@ def main():
     parser.add_argument("--M", type=int, required=True, help="number of MC repetitions")
     parser.add_argument("--output_dp", type=str, default="", help="where to dump output")
     parser.add_argument("--alpha", type=float, default=0.05, help="significance level")
-    parser.add_argument("--sigma", type=float, default=0.1, help="sigma for MVNs")
     parser.add_argument("--persistence_dim", type=int, default=1, help="dim of persistance dim")
 
 
