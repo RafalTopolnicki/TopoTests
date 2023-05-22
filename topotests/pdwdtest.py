@@ -83,6 +83,7 @@ class PDWDTest_onesample:
         pds = get_pds(samples, persistence_dim=self.persistence_dim)
         accpect_h0 = []
         pvals = []
+        stats = []
 
         for pd_pred in pds:
             wds = []
@@ -91,5 +92,6 @@ class PDWDTest_onesample:
             res = cramervonmises_2samp(wds, self.wdmatrix_flat)
             accpect_h0.append(res.pvalue >= self.significance_level)
             pvals.append(res.pvalue)
-
+            stats.append(res.statistic)
+        self.representation_threshold = stats
         return accpect_h0, pvals
