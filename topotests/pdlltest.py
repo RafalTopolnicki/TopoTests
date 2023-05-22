@@ -12,7 +12,6 @@ class PDLLTest_onesample:
         n: int,
         dim: int,
         persistence_dim: int,
-        sigma: float,
         significance_level: float = 0.05,
         scaling=1,
         standarize=False,
@@ -24,11 +23,10 @@ class PDLLTest_onesample:
         self.sample_pts_n = n
         self.data_dim = int(dim)
         self.persistence_dim = persistence_dim
-        self.sigma = sigma,
         self.significance_level = significance_level
         self.standarize = standarize
         self.scaling = scaling
-        self.representation = pdll_representation(persistence_dim=self.persistence_dim, sigma=self.sigma)
+        self.representation = pdll_representation(persistence_dim=self.persistence_dim)
         self.loglikelihoods = None
         self.representation_threshold = None
         if self.persistence_dim >= self.data_dim:

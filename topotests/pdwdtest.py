@@ -93,5 +93,6 @@ class PDWDTest_onesample:
             accpect_h0.append(res.pvalue >= self.significance_level)
             pvals.append(res.pvalue)
             stats.append(res.statistic)
+        # TODO: this is just for now to see if we should use the same critical values
         self.representation_threshold = stats
         return accpect_h0, pvals
