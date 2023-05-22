@@ -32,7 +32,7 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 
 
 def run_mc(rvs, args):
-    outputfilename = f"dpwdtest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}.csv"
+    outputfilename = f"pdwdtest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
     df_done = None

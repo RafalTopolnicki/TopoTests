@@ -2,7 +2,7 @@ import numpy as np
 #from pdwd import pdwd_representation
 import gudhi.wasserstein as gdw
 import gudhi as gd
-
+from scipy.stats import ks_2samp, cramervonmises_2samp, anderson_ksamp
 
 def sample_standarize(sample):
     return (sample - np.mean(sample, axis=0)) / np.std(sample, axis=0)
@@ -24,6 +24,7 @@ class PDWDTest_onesample:
         n: int,
         dim: int,
         persistence_dim: int,
+        order: float = 1.0,
         significance_level: float = 0.05,
         scaling=1,
         standarize=False,
@@ -36,10 +37,12 @@ class PDWDTest_onesample:
         self.data_dim = int(dim)
         self.persistence_dim = persistence_dim
         self.significance_level = significance_level
+        self.order = order
         self.standarize = standarize
         self.scaling = scaling
         self.representation = None
         self.wdmatrix = None
+        self.wdmatrix_flat = None
         self.representation_threshold = None
         self.representation_distances = None
         if self.persistence_dim >= self.data_dim:
@@ -58,12 +61,12 @@ class PDWDTest_onesample:
         self.pds_test = get_pds(samples_test, persistence_dim=self.persistence_dim)
 
         self.representation_distances = []
-        for itest in range(n_test):
-            wds = []
-            for isig in range(n_signature):
-                wds.append(gdw.wasserstein_distance(self.pds[isig], self.pds_test[itest]))
-            self.representation_distances.append(np.max(wds))
-        self.representation_threshold = np.quantile(self.representation_distances, 1 - self.significance_level)
+        self.wdmatrix = np.zeros((n_test, n_signature))
+        for isig in range(n_signature):
+            for itest in range(n_test):
+                self.wdmatrix[itest, isig] = gdw.wasserstein_distance(self.pds[isig], self.pds_test[itest],
+                                                                      order=self.order)
+        self.wdmatrix_flat = self.wdmatrix.flatten()
         self.fitted = True
 
     def predict(self, samples):
@@ -84,9 +87,9 @@ class PDWDTest_onesample:
         for pd_pred in pds:
             wds = []
             for pd_train in self.pds:
-                wds.append(gdw.wasserstein_distance(pd_train, pd_pred))
-            wds_sup = np.max(wds)
-            accpect_h0.append(wds_sup < self.representation_threshold)
-            pvals.append(np.mean([wds_sup < rp for rp in self.representation_distances]))
+                wds.append(gdw.wasserstein_distance(pd_train, pd_pred, order=self.order))
+            res = cramervonmises_2samp(wds, self.wdmatrix_flat)
+            accpect_h0.append(res.pvalue >= self.significance_level)
+            pvals.append(res.pvalue)
 
         return accpect_h0, pvals

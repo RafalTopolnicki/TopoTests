@@ -1,3 +1,5 @@
 *.csv
 *.pyc
+*.pdf
 topotests/__pycache__
+/notebooks/plots/*.pdf
