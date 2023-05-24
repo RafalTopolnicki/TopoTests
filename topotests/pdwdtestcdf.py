@@ -1,7 +1,8 @@
 import numpy as np
+from statsmodels.distributions.empirical_distribution import ECDF
 import gudhi.wasserstein as gdw
 import gudhi as gd
-from scipy.stats import ks_2samp, cramervonmises_2samp, anderson_ksamp
+from scipy.stats import ks_2samp, cramervonmises_2samp, anderson_ksamp, ks_1samp
 
 def sample_standarize(sample):
     return (sample - np.mean(sample, axis=0)) / np.std(sample, axis=0)
@@ -17,7 +18,13 @@ def get_pds(samples, persistence_dim):
         pers_diagrams.append(pers_diagram)
     return pers_diagrams
 
-class PDWDTest_onesample:
+class cdfinterpolation:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def cdf(self, x):
+        return np.interp(x, self.x, self.y)
+class PDWDCDFTest_onesample:
     def __init__(
         self,
         n: int,
@@ -47,7 +54,7 @@ class PDWDTest_onesample:
         self.pds = None
         self.pds_test = None
         self.pds_threshold = None
-        self.cvm_stats = None
+        self.ks_stats = None
         if self.persistence_dim >= self.data_dim:
             raise ValueError(f'persistence_dim must be smaller than data_dim')
 
@@ -72,16 +79,24 @@ class PDWDTest_onesample:
             for itest in range(n_test):
                 self.wdmatrix[itest, isig] = gdw.wasserstein_distance(self.pds[isig], self.pds_test[itest],
                                                                       order=self.order)
-        self.wdmatrix_flat = self.wdmatrix.flatten()
+        # compute average distance CDF
+        self.wd_max = np.max(self.wdmatrix)
+        self.wd_cdf_x = np.linspace(0, self.wd_max, 1000)
+        self.wd_cdf_y = np.array([0.0]*1000)
+        # iterate over rows and interpolate ECDF onto wd_cdf_x
+        for row in self.wdmatrix:
+            self.wd_cdf_y += ECDF(row)(self.wd_cdf_x)
+        self.wd_cdf_y /= n_signature
+        self.cdf = cdfinterpolation(self.wd_cdf_x, self.wd_cdf_y)
 
-        self.cvm_stats = []
+        self.ks_stats = []
         for pd_thres in self.pds_threshold:
             wds = []
             for pd_train in self.pds:
                 wds.append(gdw.wasserstein_distance(pd_train, pd_thres, order=self.order))
-            res = cramervonmises_2samp(wds, self.wdmatrix_flat)
-            self.cvm_stats.append(res.statistic)
-        self.representation_threshold = np.quantile(self.cvm_stats, 1-self.significance_level)
+            res = ks_1samp(wds, self.cdf.cdf)
+            self.ks_stats.append(res.statistic)
+        self.representation_threshold = np.quantile(self.ks_stats, 1-self.significance_level)
         self.fitted = True
 
     def predict(self, samples):
@@ -103,7 +118,7 @@ class PDWDTest_onesample:
             wds = []
             for pd_train in self.pds:
                 wds.append(gdw.wasserstein_distance(pd_train, pd_pred, order=self.order))
-            stat = cramervonmises_2samp(wds, self.wdmatrix_flat).statistic
+            stat = ks_1samp(wds, self.cdf.cdf).statistic
             accpect_h0.append(stat <= self.representation_threshold)
-            pvals.append(np.mean(stat <= self.cvm_stats))
+            pvals.append(np.mean(stat <= self.ks_stats))
         return accpect_h0, pvals
