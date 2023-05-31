@@ -48,17 +48,3 @@ class pdllmean_representation:
     def get_ll(self, sample):
         pd = self._compute_persistance_points([sample])[0]
         return -self._gaussian_mixture_mean_score(pd)
-
-    # def transform(self, samples):
-    #     pdpoints = self._compute_persistance_points(samples)
-    #     return pdpoints
-
-    # def get_ll(self, sample):
-    #     pdpoints = self.transform([sample])
-    #     loglikelihood = 0
-    #     for pdpoint in pdpoints:
-    #         pdpoints_density = normal_density(x=pdpoint, loc=self.pdpoints, sigma=self.sigma)
-    #         # since MVN has diagonal covarinace matrix we can total density is just a product of densities in each axis
-    #         loglikelihood += -np.log(np.sum(np.prod(pdpoints_density, axis=1)))
-    #     return loglikelihood
-    #
