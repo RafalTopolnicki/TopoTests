@@ -10,10 +10,6 @@ from pdlltest import PDLLTest_onesample
 import pandas as pd
 import logging
 
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["NUM_THREADS"] = "1"
-os.environ["OMP_NUM_THREADS"] = "1"
-
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 
 np.random.seed(1)
