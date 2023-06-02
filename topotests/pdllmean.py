@@ -28,8 +28,8 @@ class pdllmean_representation:
         return all_pers_points
 
     def _gaussian_mixture_mean_score(self, pd_sample):
-        scores = [gm.score(pd_sample) for gm in self.gaussian_models]
-        return np.mean(scores)
+        scores = [-gm.score(pd_sample) for gm in self.gaussian_models]
+        return np.max(scores)
 
     def fit(self, samples):
         self.pdpoints = self._compute_persistance_points(samples)

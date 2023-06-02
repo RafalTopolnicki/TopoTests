@@ -2,6 +2,9 @@ import numpy as np
 import gudhi as gd
 from sklearn.mixture import GaussianMixture
 
+# def normal_density(x, loc, conv, convinv):
+#     #x = np.transpose(x-loc).dot(convinv).dot(x-loc)
+#     return np.exp(-(x-loc)**2/(2*sigma))
 
 class pdllmeanpdf_representation:
     def __init__(self, persistence_dim):
@@ -28,6 +31,8 @@ class pdllmeanpdf_representation:
         return all_pers_points
 
     def _gaussian_mixture_mean_score(self, pd_sample):
+        gm = self.gaussian_models[0]
+        likelihod = normal_density(pd_sample, gm.means_[0], gm.covariances_[0], gm.covariances_inv_[0])
         scores = [np.sum(np.log(gm.predict_proba(pd_sample))) for gm in self.gaussian_models]
         return np.mean(scores)
 
@@ -36,13 +41,15 @@ class pdllmeanpdf_representation:
         self.gaussian_models = []
         # fit gaussians to each PD
         # TODO: fit also BayesianGaussianMixture
-        n_componentss = [1, 2, 3, 4, 5, 7, 8, 9, 10, 15, 20]
+        n_componentss = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
         for pdp in self.pdpoints:
             # bics = [GaussianMixture(n_components=n_components).fit(pdp).bic(pdp) if n_components < 0.5*pdp.shape[0] else np.Inf
             #         for n_components in n_componentss]
             bics = [GaussianMixture(n_components=n_components).fit(pdp).bic(pdp) for n_components in n_componentss]
             n_components = n_componentss[np.argmin(bics)]
-            self.gaussian_models.append(GaussianMixture(n_components=n_components).fit(pdp))
+            gm = GaussianMixture(n_components=n_components).fit(pdp)
+            gm.covariances_inv_ = np.array([np.linalg.inv(cov) for cov in gm.covariances_])
+            self.gaussian_models.append(gm)
         self.fitted = True
 
     def get_ll(self, sample):
