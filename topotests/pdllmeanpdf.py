@@ -2,9 +2,10 @@ import numpy as np
 import gudhi as gd
 from sklearn.mixture import GaussianMixture
 
-# def normal_density(x, loc, conv, convinv):
-#     #x = np.transpose(x-loc).dot(convinv).dot(x-loc)
-#     return np.exp(-(x-loc)**2/(2*sigma))
+def normal_density(x, loc, conv, convinv):
+    det = np.linalg.det(conv)
+    return np.exp((x-loc).dot(convinv).dot(np.transpose(x-loc))[0, :])/np.sqrt(det)
+
 
 class pdllmeanpdf_representation:
     def __init__(self, persistence_dim):
@@ -32,9 +33,10 @@ class pdllmeanpdf_representation:
 
     def _gaussian_mixture_mean_score(self, pd_sample):
         gm = self.gaussian_models[0]
-        likelihod = normal_density(pd_sample, gm.means_[0], gm.covariances_[0], gm.covariances_inv_[0])
-        scores = [np.sum(np.log(gm.predict_proba(pd_sample))) for gm in self.gaussian_models]
-        return np.mean(scores)
+        density = np.zeros(pd_sample.shape[0])
+        for mean, cov, cov_inv in zip(gm.means_, gm.covariances_, gm.covariances_inv_):
+            density += normal_density(pd_sample, mean,  cov, cov_inv)
+        return np.mean(np.log(density))
 
     def fit(self, samples):
         self.pdpoints = self._compute_persistance_points(samples)
