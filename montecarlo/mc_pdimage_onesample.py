@@ -34,7 +34,7 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 def run_mc(rvs, args):
     rv_true = rvs[args.distid]
     null_distr_label = rv_true.label
-    outputfilename = f"pdimagetest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}_null={null_distr_label}.csv"
+    outputfilename = f"pdimagetest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}_log={args.log}_image_bandwidth={args.image_bandwidth}_null={null_distr_label}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
 
