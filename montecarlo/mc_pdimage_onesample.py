@@ -44,7 +44,9 @@ def run_mc(rvs, args):
         n=args.n,
         dim=args.dim,
         significance_level=args.alpha,
-        persistence_dim=args.persistence_dim
+        persistence_dim=args.persistence_dim,
+        log=args.log,
+        image_bandwidth=args.image_bandwidth,
     )
     # train TopoTest
     pdimage_test.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
@@ -95,6 +97,8 @@ def main():
     parser.add_argument("--alpha", type=float, default=0.05, help="significance level")
     parser.add_argument("--persistence_dim", type=int, default=1, help="dim of persistance dim")
     parser.add_argument("--distid", type=int, required=True, help="which distribution consider as null")
+    parser.add_argument("--log", action='store_true', help="log-transform persistence diagrams")
+    parser.add_argument("--image_bandwidth", type=float, default=0.01, help="image smearing bandwidth")
 
     args = parser.parse_args()
 

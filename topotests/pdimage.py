@@ -7,7 +7,8 @@ from scipy.stats import ks_2samp, cramervonmises_2samp, anderson_ksamp
 def sample_standarize(sample):
     return (sample - np.mean(sample, axis=0)) / np.std(sample, axis=0)
 
-def get_pds(samples, persistence_dim):
+def get_pds(samples, persistence_dim, log=False):
+    log_offest = 1e-2
     pers_diagrams = []
     for sample_id, sample in enumerate(samples):
         if len(sample.shape) == 1:
@@ -15,7 +16,11 @@ def get_pds(samples, persistence_dim):
         ac = gd.AlphaComplex(points=sample).create_simplex_tree()
         ac.compute_persistence()
         pers_diagram = ac.persistence_intervals_in_dimension(persistence_dim)
-        pers_diagrams.append(pers_diagram)
+        if log:
+            pers_diagrams.append(np.log(pers_diagram+log_offest))
+        else:
+            pers_diagrams.append(pers_diagram)
+
     return pers_diagrams
 
 class PDImageTest_onesample:
@@ -28,6 +33,8 @@ class PDImageTest_onesample:
         significance_level: float = 0.05,
         scaling=1,
         standarize=False,
+        log=False,
+        image_bandwidth=1e-2
     ):
         """
         TODO: add comment
@@ -45,7 +52,8 @@ class PDImageTest_onesample:
         self.representation_distances = None
         self.landscape = None
         self.image_resolution = 400
-        self.image_bandwidth = 1e-2 # this is sample size dependent
+        self.image_bandwidth = image_bandwidth
+        self.log = log
         if self.persistence_dim >= self.data_dim:
             raise ValueError(f'persistence_dim must be smaller than data_dim')
 
@@ -58,8 +66,8 @@ class PDImageTest_onesample:
             samples_test = [sample_standarize(sample) for sample in samples_test]
 
         # get signatures representations of both samples
-        self.pds = get_pds(samples, persistence_dim=self.persistence_dim)
-        self.pds_test = get_pds(samples_test, persistence_dim=self.persistence_dim)
+        self.pds = get_pds(samples, persistence_dim=self.persistence_dim, log=self.log)
+        self.pds_test = get_pds(samples_test, persistence_dim=self.persistence_dim, log=self.log)
 
         # fit landscape
         xmin, xmax = np.mean([np.quantile(pd[:, 0], [0.025, 0.95]) for pd in self.pds], axis=0)
@@ -90,7 +98,7 @@ class PDImageTest_onesample:
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
 
-        pds = get_pds(samples, persistence_dim=self.persistence_dim)
+        pds = get_pds(samples, persistence_dim=self.persistence_dim, log=self.log)
         representations = self.image.transform(pds)
 
         accpect_h0 = []
