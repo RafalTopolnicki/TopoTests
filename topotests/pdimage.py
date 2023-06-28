@@ -34,7 +34,9 @@ class PDImageTest_onesample:
         scaling=1,
         standarize=False,
         log=False,
-        image_bandwidth=1e-2
+        image_bandwidth=1e-2,
+        norm='sup',
+        aggregate='mean',
     ):
         """
         TODO: add comment
@@ -54,6 +56,8 @@ class PDImageTest_onesample:
         self.image_resolution = 400
         self.image_bandwidth = image_bandwidth
         self.log = log
+        self.norm = norm
+        self.aggregate = aggregate
         if self.persistence_dim >= self.data_dim:
             raise ValueError(f'persistence_dim must be smaller than data_dim')
 
@@ -70,19 +74,37 @@ class PDImageTest_onesample:
         self.pds_test = get_pds(samples_test, persistence_dim=self.persistence_dim, log=self.log)
 
         # fit landscape
+        #xmin, xmax = np.mean([np.quantile(pd[:, 0], [0.025, 0.95]) for pd in self.pds], axis=0)
+        #ymin, ymax = np.mean([np.quantile(pd[:, 1], [0.025, 0.95]) for pd in self.pds], axis=0)
         xmin, xmax = np.mean([np.quantile(pd[:, 0], [0.025, 0.95]) for pd in self.pds], axis=0)
         ymin, ymax = np.mean([np.quantile(pd[:, 1], [0.025, 0.95]) for pd in self.pds], axis=0)
 
         self.image = gdr.PersistenceImage(resolution=(self.image_resolution, self.image_resolution),
-                                          bandwidth=self.image_bandwidth, im_range=[xmin, xmax, ymin, ymax]).fit(self.pds)
+                                          bandwidth=self.image_bandwidth, im_range=[xmin, xmax, ymin, ymax],
+                                          ).fit(self.pds)
         self.representation = self.image.transform(self.pds)
-        self.representation = np.mean(self.representation, axis=0)
+        # compute mean image
+        if self.aggregate == 'mean':
+            self.representation = np.mean(self.representation, axis=0)
 
         representation_test = self.image.transform(self.pds_test)
 
         self.representation_distances = []
         for representation in representation_test:
-            self.representation_distances.append(np.max(np.abs(representation - self.representation))) # L1
+            if self.aggregate == 'mean':
+                if self.norm == 'sup':
+                    self.representation_distances.append(np.max(np.abs(representation - self.representation)))
+                elif self.norm == 'l1':
+                    self.representation_distances.append(np.sum(np.abs(representation - self.representation)))
+                else:
+                    self.representation_distances.append(np.sum((representation - self.representation)**2))
+            else: # aggregate none
+                if self.norm == 'sup':
+                    self.representation_distances.append(np.max([np.max(np.abs(representation - rep_train)) for rep_train in self.representation]))
+                if self.norm == 'l1':
+                    self.representation_distances.append(np.max([np.sum(np.abs(representation - rep_train)) for rep_train in self.representation]))
+                if self.norm == 'l2':
+                    self.representation_distances.append(np.max([np.sum((representation - rep_train)**2) for rep_train in self.representation]))
 
         self.representation_threshold = np.quantile(self.representation_distances, 1-self.significance_level)
         self.fitted = True
@@ -105,7 +127,21 @@ class PDImageTest_onesample:
         pvals = []
 
         for representation in representations:
-            d = np.max(np.abs(representation - self.representation))
+            if self.aggregate == 'mean':
+                if self.norm == 'sup':
+                    d = np.max(np.abs(representation - self.representation))
+                elif self.norm == 'l1':
+                    d = np.sum(np.abs(representation - self.representation))
+                else:
+                    d = np.sum((representation - self.representation)**2)
+            else: # self.aggregate == 'none'
+                if self.norm == 'sup':
+                    d = np.max([np.max(np.abs(representation - rep_train)) for rep_train in self.representation])
+                if self.norm == 'l1':
+                    d = np.max([np.sum(np.abs(representation - rep_train)) for rep_train in self.representation])
+                if self.norm == 'l2':
+                    d = np.max([np.sum((representation - rep_train)**2) for rep_train in self.representation])
+
             accpect_h0.append(d<self.representation_threshold)
             pvals.append(np.mean(d > self.representation_distances))
         return accpect_h0, pvals

@@ -6,7 +6,8 @@ from randomvariables import get_random_variables
 
 # setting path
 sys.path.append("../topotests/")
-from topotests import TopoTest_onesample
+#from topotests import TopoTest_onesample
+from topotests.topotests import TopoTest_onesample
 import pandas as pd
 import logging
 

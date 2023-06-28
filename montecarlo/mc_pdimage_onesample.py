@@ -34,7 +34,7 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 def run_mc(rvs, args):
     rv_true = rvs[args.distid]
     null_distr_label = rv_true.label
-    outputfilename = f"pdimagetest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}_log={args.log}_image_bandwidth={args.image_bandwidth}_null={null_distr_label}.csv"
+    outputfilename = f"pdimagetest_dim={args.dim}_n={args.n}_persistence_dim={args.persistence_dim}_log={args.log}_image_bandwidth={args.image_bandwidth}_norm={args.norm}_aggregate={args.aggregate}_null={null_distr_label}.csv"
     outputfilepath = os.path.join(args.output_dp, outputfilename)
     results = []
 
@@ -47,6 +47,8 @@ def run_mc(rvs, args):
         persistence_dim=args.persistence_dim,
         log=args.log,
         image_bandwidth=args.image_bandwidth,
+        norm=args.norm,
+        aggregate=args.aggregate
     )
     # train TopoTest
     pdimage_test.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
@@ -99,6 +101,8 @@ def main():
     parser.add_argument("--distid", type=int, required=True, help="which distribution consider as null")
     parser.add_argument("--log", action='store_true', help="log-transform persistence diagrams")
     parser.add_argument("--image_bandwidth", type=float, default=0.01, help="image smearing bandwidth")
+    parser.add_argument("--norm", choices=['sup', 'l1', 'l2'], default='sup', help="norm used to compare images")
+    parser.add_argument("--aggregate", choices=['mean', 'none'], default='mean', help='how to aggregate images')
 
     args = parser.parse_args()
 
