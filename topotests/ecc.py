@@ -6,6 +6,8 @@ import random
 # computes each simplex contribution to the ECC
 # function by Davide
 def compute_ECC_contributions_alpha(point_cloud):
+    points_n = point_cloud.shape[0]
+    points_dim = point_cloud.shape[1]
     alpha_complex = gd.AlphaComplex(points=point_cloud)
     simplex_tree = alpha_complex.create_simplex_tree()
 
@@ -23,7 +25,10 @@ def compute_ECC_contributions_alpha(point_cloud):
     for key in to_del:
         del ecc[key]
 
-    return sorted(list(ecc.items()), key=lambda x: x[0])
+    ecc = sorted(list(ecc.items()), key=lambda x: x[0])
+    factor = points_n**(2.0/points_dim)
+    ecc = [(e[0]*factor, e[1]/points_n) for e in ecc]
+    return ecc
 
 class ecc_representation:
     def __init__(self, norm="sup", n_interpolation_points=100, mode="approximate"):

@@ -81,7 +81,7 @@ def main():
         required=True,
         help="data size i.e. number of data points in each sample",
     )
-    parser.add_argument("--dim", type=int, required=True, help="dimension of the data points")
+    parser.add_argument("--dim", type=str, required=True, help="dimension of the data points")
     parser.add_argument("--permutations", type=int, required=True, help="number of permutations")
     parser.add_argument("--M", type=int, required=True, help="number of MC repetitions")
     parser.add_argument("--output_dp", type=str, default="", help="where to dump output")

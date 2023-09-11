@@ -58,9 +58,9 @@ def run_mc(rvs, args):
             for loop in range(args.M):
                 sample0 = rv_true.rvs(args.n)
                 sample1 = rv_alter.rvs(args.n)
-                if args.dim == 1:
+                if args.dim == '1':
                     dks, pval = stats.ks_2samp(sample0[:, 0], sample1[:, 0])
-                elif args.dim == 2:
+                elif args.dim == '2':
                     dks, pval = ks2d2s(sample0, sample1)
                 else:
                     dks, pval = multiKS2s(sample0, sample1)
@@ -99,7 +99,7 @@ def main():
         required=True,
         help="data size i.e. number of data points in each sample",
     )
-    parser.add_argument("--dim", type=int, required=True, help="dimension of the data points")
+    parser.add_argument("--dim", type=str, required=True, help="dimension of the data points")
     parser.add_argument("--M", type=int, required=True, help="number of MC repetitions")
     parser.add_argument("--output_dp", type=str, default="", help="where to dump output")
     args = parser.parse_args()

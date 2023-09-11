@@ -1,13 +1,14 @@
 import numpy as np
 import gudhi.representations as gdr
 import gudhi as gd
-from mergegram import mergegram
+from mergegram import mergegram, pathgram
 
 def sample_standarize(sample):
     return (sample - np.mean(sample, axis=0)) / np.std(sample, axis=0)
 
 def get_meregram(samples):
-    mergegrams = [mergegram(sample) for sample in samples]
+#    mergegrams = [mergegram(sample) for sample in samples]
+    mergegram = [pathgram(sample) for sample in samples]
     return mergegrams
 class PDMergegram_onesample:
     def __init__(

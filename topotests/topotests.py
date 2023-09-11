@@ -47,6 +47,9 @@ class TopoTest_onesample:
         # generate signature samples and test sample
         samples = [rv.rvs(self.sample_pts_n) * self.scaling for i in range(n_signature)]
         samples_test = [rv.rvs(self.sample_pts_n) * self.scaling for i in range(n_test)]
+        if self.sample_pt_dim == 1:
+            samples = [np.expand_dims(sample, 1) for sample in samples]
+            samples_test = [np.expand_dims(sample, 1) for sample in samples_test]		       
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
             samples_test = [sample_standarize(sample) for sample in samples_test]
@@ -70,7 +73,6 @@ class TopoTest_onesample:
 
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
-
         self.representation_distance_predict, _ = self.representation.transform(samples)
         accpect_h0 = [dp < self.representation_threshold for dp in self.representation_distance_predict]
         # calculate pvalues
@@ -90,8 +92,13 @@ def TopoTest_twosample(X1, X2, norm="sup", loops=100):
     n2 = X2.shape[0]
 
     def _get_ecc(X, epsmax=None):
+        n = X.shape[0]
+        dim = X.shape[1]
         ecc = np.array(compute_ECC_contributions_alpha(X))
         ecc[:, 1] = np.cumsum(ecc[:, 1])
+        ecc[:, 1] = ecc[:, 1]/n
+        #ecc[:, 0] = ecc[:, 0]*n # THIS WORKS ONLY in dim=2
+        ecc[:, 0] = ecc[:, 0]*n**(2/dim)
         if epsmax is not None:
             ecc = np.vstack([ecc, [epsmax, 1]])
         return ecc
