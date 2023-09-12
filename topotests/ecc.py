@@ -31,11 +31,10 @@ def compute_ECC_contributions_alpha(point_cloud):
     return ecc
 
 class ecc_representation:
-    def __init__(self, norm="sup", n_interpolation_points=100, mode="approximate"):
+    def __init__(self, norm="sup", mode="approximate"):
         self.representation = None
         self.xs = None
         self.max_range = -np.Inf
-        self.n_interpolation_points = n_interpolation_points
         self.n_fitted = 0
         self.fitted = False
         self.norm = norm
@@ -50,21 +49,22 @@ class ecc_representation:
         eccs = []
         jumps = set()
         if self.mode == "exact":
-            for sample in samples:
-                ecc = np.array(compute_ECC_contributions_alpha(sample))
-                ecc[:, 1] = np.cumsum(ecc[:, 1])
-                jumps.update(ecc[:, 0])  # FIXME: ecc[:, 0] is stored in eccs anyway
-                self.max_range = max(self.max_range, ecc[-1, 0])
-                eccs.append(ecc)
-            self.xs = np.sort(list(jumps))
-            self.representation = self.xs * 0
-            # extend all ecc so that it include the max_range
-            for ecc in eccs:
-                ecc_extended = np.vstack([ecc, [self.max_range, 1]])
-                interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind="previous")
-                y_inter = interpolator(self.xs)
-                self.representation += y_inter
-            self.representation /= len(samples)
+            raise NotImplemented("Mode exact is not supported anymore")
+            # for sample in samples:
+            #     ecc = np.array(compute_ECC_contributions_alpha(sample))
+            #     ecc[:, 1] = np.cumsum(ecc[:, 1])
+            #     jumps.update(ecc[:, 0])  # FIXME: ecc[:, 0] is stored in eccs anyway
+            #     self.max_range = max(self.max_range, ecc[-1, 0])
+            #     eccs.append(ecc)
+            # self.xs = np.sort(list(jumps))
+            # self.representation = self.xs * 0
+            # # extend all ecc so that it include the max_range
+            # for ecc in eccs:
+            #     ecc_extended = np.vstack([ecc, [self.max_range, 1]])
+            #     interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind="previous")
+            #     y_inter = interpolator(self.xs)
+            #     self.representation += y_inter
+            # self.representation /= len(samples)
         else:
             # find jump positions based on given number of ecc curves
             approximate_n_trials = np.min([self.approximate_n_trials, len(samples)])
@@ -86,8 +86,8 @@ class ecc_representation:
                 # cut ecc on self.max_range
                 range_ind = ecc[:, 0] < self.max_range
                 ecc = ecc[range_ind, :]
-                # add ecc max to the end
-                ecc_extended = np.vstack([ecc, [self.max_range, 1]])
+                # add ecc max to the end - should we 0 or 1/n? but what if we have different n?
+                ecc_extended = np.vstack([ecc, [self.max_range, 0]])
                 interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind="previous")
                 y_inter = interpolator(self.xs)
                 self.representation += y_inter
@@ -105,15 +105,16 @@ class ecc_representation:
             ecc[:, 1] = np.cumsum(ecc[:, 1])
             range_ind = ecc[:, 0] < self.max_range
             ecc = ecc[range_ind, :]
-            ecc = np.vstack([ecc, [self.max_range, 1]])
+            # add ecc max to the end - should we 0 or 1/n? but what if we have different n?
+            ecc = np.vstack([ecc, [self.max_range, 0]])
             interpolator = spi.interp1d(ecc[:, 0], ecc[:, 1], kind="previous")
             representation = interpolator(self.xs)
             representations.append(representation)
             if self.norm == "l1":
-                dist.append(np.trapz(np.abs(representation - self.representation), x=self.xs))
+                dist.append(np.trapz(np.abs(representation - self.representation), x=self.xs) * np.sqrt(sample.shape[0]))
             elif self.norm == "l2":
-                dist.append(np.trapz((representation - self.representation) ** 2, x=self.xs))
+                dist.append(np.trapz((representation - self.representation) ** 2, x=self.xs) * np.sqrt(sample.shape[0]))
             else:  # sup
-                dist.append(np.max(np.abs(representation - self.representation)))
+                dist.append(np.max(np.abs(representation - self.representation)) * np.sqrt(sample.shape[0]))
 
         return dist, representations

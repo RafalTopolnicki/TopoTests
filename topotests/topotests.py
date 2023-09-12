@@ -63,6 +63,8 @@ class TopoTest_onesample:
         self.representation_threshold = np.quantile(self.representation_distance, 1 - self.significance_level)
         self.fitted = True
 
+    def scale_threshold_with_samplesize(self, n):
+        return self.representation_threshold / np.sqrt(n) * np.sqrt(self.n)
     def predict(self, samples):
         if not self.fitted:
             raise RuntimeError("Cannot run predict(). Run fit() first!")
@@ -74,10 +76,10 @@ class TopoTest_onesample:
         if self.standarize:
             samples = [sample_standarize(sample) for sample in samples]
         self.representation_distance_predict, _ = self.representation.transform(samples)
-        accpect_h0 = [dp < self.representation_threshold for dp in self.representation_distance_predict]
+        accepect_h0 = [dp < self.representation_threshold for dp in self.representation_distance_predict]
         # calculate pvalues
         pvals = [np.mean(self.representation_distance > dp) for dp in self.representation_distance_predict]
-        return accpect_h0, pvals
+        return accepect_h0, pvals
 
     def save_distance_matrix(self, filename):
         np.save(filename, self.representation_distance)
