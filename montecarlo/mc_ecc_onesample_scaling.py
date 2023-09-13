@@ -35,7 +35,6 @@ def data_row(args, true_label, alter_label, accpecth0, pvals, threshold):
 def run_mc(rvs, args):
     rv_true = rvs[args.distid]
     null_distr_label = rv_true.label
-    results = []
 
     logging.info(f"ECC-1s: Start true distribution: {rv_true.label} n={args.n} dim={args.dim}")
 
@@ -49,6 +48,7 @@ def run_mc(rvs, args):
     topotest.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
     n_tests = [int(0.1*args.n), int(0.25*args.n), int(0.5*args.n), int(args.n), int(2*args.n), int(5*args.n), int(10*args.n)]
     for n_test in n_tests:
+        results = []
         for rv_alter in rvs:
             outputfilename = f"ecctest_dim={args.dim}_n={args.n}_null={null_distr_label}_ntest={n_test}.csv"
             outputfilepath = os.path.join(args.output_dp, outputfilename)
