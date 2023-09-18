@@ -6,8 +6,8 @@ from randomvariables import get_random_variables
 
 # setting path
 sys.path.append("../topotests/")
-from topotests import TopoTest_onesample
-#from topotests.topotests import TopoTest_onesample
+#from topotests import TopoTest_onesample
+from topotests.topotests import TopoTest_onesample
 import pandas as pd
 import logging
 
@@ -42,7 +42,7 @@ def run_mc(rvs, args):
         n=args.n,
         dim=args.dim,
         significance_level=args.alpha,
-
+        method=args.method,
     )
     # train TopoTest
     topotest.fit(rv=rv_true, n_signature=args.n_signature, n_test=args.n_test)
@@ -98,6 +98,8 @@ def main():
     parser.add_argument("--output_dp", type=str, default="", help="where to dump output")
     parser.add_argument("--alpha", type=float, default=0.05, help="significance level")
     parser.add_argument("--distid", type=int, required=True, help="which distribution consider as null")
+    parser.add_argument("--method", choices=['exact', 'approximate', 'grid'], default='approximate',
+                        help="method used to compute average ECC")
 
     args = parser.parse_args()
 

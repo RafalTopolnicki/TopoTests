@@ -65,6 +65,26 @@ class ecc_representation:
             #     y_inter = interpolator(self.xs)
             #     self.representation += y_inter
             # self.representation /= len(samples)
+        elif self.mode == 'grid':
+            approximate_n_trials = np.min([self.approximate_n_trials, len(samples)])
+            trial_samples = random.choices(samples, k=approximate_n_trials)
+            for sample in trial_samples:
+                ecc = np.array(compute_ECC_contributions_alpha(sample))
+                self.max_range = max([self.max_range, ecc[-1, 0]])
+            self.xs = np.linspace(0, self.max_range, 10_000)
+            self.representation = self.xs * 0
+            for sample in samples:
+                ecc = np.array(compute_ECC_contributions_alpha(sample))
+                ecc[:, 1] = np.cumsum(ecc[:, 1])
+                # cut ecc on self.max_range
+                range_ind = ecc[:, 0] < self.max_range
+                ecc = ecc[range_ind, :]
+                # add ecc max to the end - should we 0 or 1/n? but what if we have different n?
+                ecc_extended = np.vstack([ecc, [self.max_range, 0]])
+                interpolator = spi.interp1d(ecc_extended[:, 0], ecc_extended[:, 1], kind="previous")
+                y_inter = interpolator(self.xs)
+                self.representation += y_inter
+            self.representation /= len(samples)
         else:
             # find jump positions based on given number of ecc curves
             approximate_n_trials = np.min([self.approximate_n_trials, len(samples)])

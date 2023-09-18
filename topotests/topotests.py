@@ -30,12 +30,10 @@ class TopoTest_onesample:
         self.norm = norm
         self.standarize = standarize
         self.scaling = scaling
-        if method not in ["approximate", "exact"]:
+        if method not in ["approximate", "exact", "grid"]:
             raise ValueError(f"method must be approximate or exact, got {method} instead")
-        if method == "approximate":
-            self.representation = ecc_representation(self.norm, mode="approximate")
-        if method == "exact":
-            self.representation = ecc_representation(self.norm, mode="exact")
+
+        self.representation = ecc_representation(self.norm, mode=method)
 
         self.n_points_to_save = 5000
         self.representation_distance = None
